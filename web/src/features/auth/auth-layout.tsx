@@ -28,29 +28,22 @@ type AuthLayoutProps = {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   const { t } = useTranslation()
-  const { systemName, logo, loading } = useSystemConfig()
+  const { logo, loading } = useSystemConfig()
 
   return (
     <div className='relative grid h-svh max-w-none'>
       <Link
         to='/'
-        className='absolute top-4 left-4 z-10 flex items-center gap-2 transition-opacity hover:opacity-80 sm:top-8 sm:left-8'
+        className='absolute top-4 left-4 z-10 flex items-center transition-opacity hover:opacity-80 sm:top-8 sm:left-8'
       >
-        <div className='relative h-8 w-8'>
-          {loading ? (
-            <Skeleton className='absolute inset-0 rounded-full' />
-          ) : (
-            <img
-              src={logo}
-              alt={t('Logo')}
-              className='h-8 w-8 rounded-full object-cover'
-            />
-          )}
-        </div>
         {loading ? (
-          <Skeleton className='h-6 w-24' />
+          <Skeleton className='h-10 w-40' />
         ) : (
-          <h1 className='text-xl font-medium'>{systemName}</h1>
+          <img
+            src={logo}
+            alt={t('Logo')}
+            className='h-10 w-auto object-contain'
+          />
         )}
       </Link>
       <div className='container flex items-center pt-16 sm:pt-0'>
