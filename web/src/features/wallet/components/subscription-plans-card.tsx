@@ -54,9 +54,10 @@ import { SubscriptionPurchaseDialog } from '@/features/subscriptions/components/
 import { formatDuration, formatResetPeriod } from '@/features/subscriptions/lib'
 import type {
   PlanRecord,
+  SubscriptionPlan,
   UserSubscriptionRecord,
 } from '@/features/subscriptions/types'
-import { formatQuota } from '@/lib/format'
+import { formatTokens } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 import type { PaymentMethod, TopupInfo } from '../types'
@@ -220,6 +221,20 @@ export function SubscriptionPlansCard({
     }
     return map
   }, [plans])
+
+  // Full plan lookup by id — used to surface fair-use token limits
+  // (daily tokens / RPM / concurrent) on each subscription card instead of
+  // the dollar-converted quota figure.
+  const planByIdMap = useMemo(() => {
+    const map = new Map<number, SubscriptionPlan>()
+    for (const p of plans) {
+      if (p?.plan?.id) {
+        map.set(p.plan.id, p.plan)
+      }
+    }
+    return map
+  }, [plans])
+
 
   const getRemainingDays = (sub: UserSubscriptionRecord) => {
     const endTime = sub?.subscription?.end_time || 0
@@ -400,9 +415,6 @@ export function SubscriptionPlansCard({
                 {allSubscriptions.map((sub) => {
                   const subscription = sub.subscription
                   const totalAmount = Number(subscription?.amount_total || 0)
-                  const usedAmount = Number(subscription?.amount_used || 0)
-                  const remainAmount =
-                    totalAmount > 0 ? Math.max(0, totalAmount - usedAmount) : 0
                   const planTitle =
                     planTitleMap.get(subscription?.plan_id) || ''
                   const remainDays = getRemainingDays(sub)
@@ -479,31 +491,35 @@ export function SubscriptionPlansCard({
                           {new Date(nextResetTime * 1000).toLocaleString()}
                         </div>
                       )}
-                      <div className='text-muted-foreground mt-1'>
-                        {t('Total Quota')}:{' '}
-                        {totalAmount > 0 ? (
-                          <Tooltip>
-                            <TooltipTrigger
-                              render={<span className='cursor-help' />}
-                            >
-                              {formatQuota(usedAmount)}/
-                              {formatQuota(totalAmount)} · {t('Remaining')}{' '}
-                              {formatQuota(remainAmount)}
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {t('Raw Quota')}: {usedAmount}/{totalAmount} ·{' '}
-                              {t('Remaining')} {remainAmount}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          t('Unlimited')
-                        )}
-                        {totalAmount > 0 && (
-                          <span className='ml-2'>
-                            {t('Used')} {usagePercent}%
-                          </span>
-                        )}
+                      <div className='text-muted-foreground mt-1.5'>
+                        {(() => {
+                          const planInfo = planByIdMap.get(subscription?.plan_id)
+                          const dailyTokens = Number(planInfo?.daily_token_limit || 0)
+                          const rpm = Number(planInfo?.rpm_limit || 0)
+                          const concurrent = Number(
+                            planInfo?.concurrent_limit || 0
+                          )
+                          const parts: string[] = []
+                          if (planInfo) {
+                            parts.push(
+                              `${t('Daily Token Limit')}: ${
+                                dailyTokens > 0
+                                  ? `${formatTokens(dailyTokens)}/day`
+                                  : t('Unlimited')
+                              }`
+                            )
+                            if (rpm > 0) parts.push(`${rpm} ${t('RPM')}`)
+                            if (concurrent > 0)
+                              parts.push(`${concurrent} ${t('concurrent')}`)
+                          }
+                          return parts.join(' · ') || t('Unlimited')
+                        })()}
                       </div>
+                      {totalAmount > 0 && (
+                        <span className='text-muted-foreground ml-0 mt-1 block'>
+                          {t('Used')} {usagePercent}%
+                        </span>
+                      )}
                       {totalAmount > 0 && isActive && (
                         <Progress value={usagePercent} className='mt-2 h-1.5' />
                       )}
@@ -527,7 +543,6 @@ export function SubscriptionPlansCard({
             {plans.map((p, index) => {
               const plan = p?.plan
               if (!plan) return null
-              const totalAmount = Number(plan.total_amount || 0)
               const price = Number(plan.price_amount || 0).toFixed(2)
               const isPopular = index === 0 && plans.length > 1
               const limit = Number(plan.max_purchase_per_user || 0)
@@ -539,9 +554,22 @@ export function SubscriptionPlansCard({
                 formatResetPeriod(plan, t) !== t('No Reset')
                   ? `${t('Quota Reset')}: ${formatResetPeriod(plan, t)}`
                   : null,
-                totalAmount > 0
-                  ? `${t('Total Quota')}: ${formatQuota(totalAmount)}`
-                  : `${t('Total Quota')}: ${t('Unlimited')}`,
+                (() => {
+                  const dailyTokens = Number(plan.daily_token_limit || 0)
+                  const rpm = Number(plan.rpm_limit || 0)
+                  const concurrent = Number(plan.concurrent_limit || 0)
+                  const p: string[] = []
+                  p.push(
+                    `${t('Daily Token Limit')}: ${
+                      dailyTokens > 0
+                        ? `${formatTokens(dailyTokens)}/day`
+                        : t('Unlimited')
+                    }`
+                  )
+                  if (rpm > 0) p.push(`${rpm} ${t('RPM')}`)
+                  if (concurrent > 0) p.push(`${concurrent} ${t('concurrent')}`)
+                  return p.join(' · ')
+                })(),
                 limit > 0 ? `${t('Purchase Limit')}: ${limit}` : null,
                 plan.upgrade_group
                   ? `${t('Upgrade Group')}: ${plan.upgrade_group}`
