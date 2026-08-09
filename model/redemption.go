@@ -18,12 +18,21 @@ type Redemption struct {
 	Status       int            `json:"status" gorm:"default:1"`
 	Name         string         `json:"name" gorm:"index"`
 	Quota        int            `json:"quota" gorm:"default:100"`
+	PlanId       int            `json:"plan_id" gorm:"default:0"` // >0: redeem activates this subscription plan instead of crediting quota
 	CreatedTime  int64          `json:"created_time" gorm:"bigint"`
 	RedeemedTime int64          `json:"redeemed_time" gorm:"bigint"`
 	Count        int            `json:"count" gorm:"-:all"` // only for api request
 	UsedUserId   int            `json:"used_user_id"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 	ExpiredTime  int64          `json:"expired_time" gorm:"bigint"` // 过期时间，0 表示不过期
+}
+
+// RedeemResult describes what a redemption code grants on redeem: either
+// wallet quota or an activated subscription plan.
+type RedeemResult struct {
+	Quota     int    `json:"quota"`
+	PlanId    int    `json:"plan_id"`
+	PlanTitle string `json:"plan_title"`
 }
 
 func GetAllRedemptions(startIdx int, num int) (redemptions []*Redemption, total int64, err error) {
@@ -134,12 +143,12 @@ func GetRedemptionById(id int) (*Redemption, error) {
 	return &redemption, err
 }
 
-func Redeem(key string, userId int) (quota int, err error) {
+func Redeem(key string, userId int) (result *RedeemResult, err error) {
 	if key == "" {
-		return 0, errors.New("未提供兑换码")
+		return nil, errors.New("未提供兑换码")
 	}
 	if userId == 0 {
-		return 0, errors.New("无效的 user id")
+		return nil, errors.New("无效的 user id")
 	}
 	redemption := &Redemption{}
 
@@ -148,6 +157,7 @@ func Redeem(key string, userId int) (quota int, err error) {
 		keyCol = `"key"`
 	}
 	common.RandomSleep()
+	var redeemResult *RedeemResult
 	err = DB.Transaction(func(tx *gorm.DB) error {
 		err := lockForUpdate(tx).Where(keyCol+" = ?", key).First(redemption).Error
 		if err != nil {
@@ -160,8 +170,9 @@ func Redeem(key string, userId int) (quota int, err error) {
 			return errors.New("该兑换码已过期")
 		}
 		// Compare-and-swap on status: only the transaction that flips
-		// enabled -> used may credit quota, so a concurrent redeem of the
-		// same code loses here even without a row lock (e.g. on SQLite).
+		// enabled -> used may credit quota / activate the plan, so a
+		// concurrent redeem of the same code loses here even without a
+		// row lock (e.g. on SQLite).
 		result := tx.Model(&Redemption{}).
 			Where("id = ? AND status = ?", redemption.Id, common.RedemptionCodeStatusEnabled).
 			Updates(map[string]interface{}{
@@ -175,14 +186,48 @@ func Redeem(key string, userId int) (quota int, err error) {
 		if result.RowsAffected == 0 {
 			return errors.New("该兑换码已被使用")
 		}
-		return tx.Model(&User{}).Where("id = ?", userId).Update("quota", gorm.Expr("quota + ?", redemption.Quota)).Error
+
+		if redemption.PlanId > 0 {
+			// Pilot / promo code: directly activate the subscription plan.
+			plan, err := GetSubscriptionPlanById(redemption.PlanId)
+			if err != nil {
+				return err
+			}
+			if !plan.Enabled {
+				return errors.New("该兑换码对应的套餐未启用")
+			}
+			sub, err := CreateUserSubscriptionFromPlanTx(tx, userId, plan, "redemption")
+			if err != nil {
+				return err
+			}
+			_ = sub // group upgrade applied inside the tx; cache refresh happens after commit
+			redeemResult = &RedeemResult{
+				Quota:     0,
+				PlanId:    plan.Id,
+				PlanTitle: plan.Title,
+			}
+			return nil
+		}
+
+		if err := tx.Model(&User{}).Where("id = ?", userId).Update("quota", gorm.Expr("quota + ?", redemption.Quota)).Error; err != nil {
+			return err
+		}
+		redeemResult = &RedeemResult{Quota: redemption.Quota}
+		return nil
 	})
 	if err != nil {
 		common.SysError("redemption failed: " + err.Error())
-		return 0, ErrRedeemFailed
+		return nil, ErrRedeemFailed
 	}
-	RecordLog(userId, LogTypeTopup, fmt.Sprintf("通过兑换码充值 %s，兑换码ID %d", logger.LogQuota(redemption.Quota), redemption.Id))
-	return redemption.Quota, nil
+	if redeemResult != nil && redeemResult.PlanId > 0 {
+		// Subscription group upgrade was applied inside the tx; refresh the
+		// cached user group now that the tx has committed.
+		refreshSubscriptionUserGroupCache(userId, "redemption subscription activation")
+		RecordLog(userId, LogTypeManage, fmt.Sprintf("通过兑换码激活订阅套餐（ID: %d），兑换码ID %d", redeemResult.PlanId, redemption.Id))
+	} else if redeemResult != nil {
+		RecordLog(userId, LogTypeTopup, fmt.Sprintf("通过兑换码充值 %s，兑换码ID %d", logger.LogQuota(redemption.Quota), redemption.Id))
+	}
+	return redeemResult, nil
 }
 
 func (redemption *Redemption) Insert() error {
@@ -199,7 +244,7 @@ func (redemption *Redemption) SelectUpdate() error {
 // Update Make sure your token's fields is completed, because this will update non-zero values
 func (redemption *Redemption) Update() error {
 	var err error
-	err = DB.Model(redemption).Select("name", "status", "quota", "redeemed_time", "expired_time").Updates(redemption).Error
+	err = DB.Model(redemption).Select("name", "status", "quota", "plan_id", "redeemed_time", "expired_time").Updates(redemption).Error
 	return err
 }
 

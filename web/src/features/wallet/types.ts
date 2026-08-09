@@ -33,7 +33,14 @@ export interface ApiResponse<T = unknown> {
  * Standard API response types
  */
 export type TopupInfoResponse = ApiResponse<TopupInfo>
-export type RedemptionResponse = ApiResponse<number>
+// Redemption codes grant either wallet quota or an activated subscription
+// plan (plan_id > 0 with plan_title) — see model.RedeemResult.
+export interface RedemptionResult {
+  quota: number
+  plan_id?: number
+  plan_title?: string
+}
+export type RedemptionResponse = ApiResponse<RedemptionResult>
 export type AmountResponse = ApiResponse<string>
 export type PaymentResponse = ApiResponse<Record<string, unknown>> & {
   url?: string

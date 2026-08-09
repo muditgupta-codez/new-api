@@ -155,10 +155,21 @@ export function useRedemptionsColumns(): ColumnDef<Redemption>[] {
       size: 320,
     },
     {
-      accessorKey: 'quota',
-      header: t('Quota'),
+      id: 'grant',
+      header: t('Grant'),
       cell: ({ row }) => {
-        const quota = row.getValue('quota') as number
+        const redemption = row.original
+        if (redemption.plan_id && redemption.plan_id > 0) {
+          return (
+            <StatusBadge
+              label={t('Plan #{{id}}', { id: redemption.plan_id })}
+              variant='info'
+              copyable={false}
+              className='-ml-1.5'
+            />
+          )
+        }
+        const quota = redemption.quota
         return (
           <StatusBadge
             label={formatQuota(quota)}

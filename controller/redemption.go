@@ -89,6 +89,22 @@ func AddRedemption(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"success": false, "message": msg})
 		return
 	}
+	// A code grants either wallet quota or a subscription plan, not both.
+	if redemption.PlanId > 0 {
+		if redemption.Quota != 0 {
+			c.JSON(http.StatusOK, gin.H{"success": false, "message": "兑换码不能同时设置额度与订阅套餐"})
+			return
+		}
+		plan, err := model.GetSubscriptionPlanById(redemption.PlanId)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{"success": false, "message": "订阅套餐不存在"})
+			return
+		}
+		if !plan.Enabled {
+			c.JSON(http.StatusOK, gin.H{"success": false, "message": "订阅套餐未启用"})
+			return
+		}
+	}
 	var keys []string
 	for i := 0; i < redemption.Count; i++ {
 		key := common.GetUUID()
@@ -98,6 +114,7 @@ func AddRedemption(c *gin.Context) {
 			Key:         key,
 			CreatedTime: common.GetTimestamp(),
 			Quota:       redemption.Quota,
+			PlanId:      redemption.PlanId,
 			ExpiredTime: redemption.ExpiredTime,
 		}
 		err = cleanRedemption.Insert()
@@ -113,9 +130,10 @@ func AddRedemption(c *gin.Context) {
 		keys = append(keys, key)
 	}
 	recordManageAudit(c, "redemption.create", map[string]interface{}{
-		"name":  redemption.Name,
-		"count": redemption.Count,
-		"quota": logger.LogQuota(redemption.Quota),
+		"name":    redemption.Name,
+		"count":   redemption.Count,
+		"quota":   logger.LogQuota(redemption.Quota),
+		"plan_id": redemption.PlanId,
 	})
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,

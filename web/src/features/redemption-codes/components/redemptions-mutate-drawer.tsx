@@ -42,6 +42,14 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Sheet,
   SheetClose,
   SheetContent,
@@ -58,6 +66,8 @@ import {
 } from '@/lib/format'
 import { handleServerError } from '@/lib/handle-server-error'
 import { addTimeToDate } from '@/lib/time'
+import { getAdminPlans } from '@/features/subscriptions/api'
+import type { PlanRecord } from '@/features/subscriptions/types'
 
 import { createRedemption, updateRedemption, getRedemption } from '../api'
 import { SUCCESS_MESSAGES } from '../constants'
@@ -93,11 +103,30 @@ export function RedemptionsMutateDrawer({
   const [loadedRedemption, setLoadedRedemption] = useState<Redemption | null>(
     null
   )
+  const [plans, setPlans] = useState<PlanRecord[]>([])
 
   const form = useForm<RedemptionFormValues>({
     resolver: zodResolver(getRedemptionFormSchema(t)),
     defaultValues: REDEMPTION_FORM_DEFAULT_VALUES,
   })
+
+  // Load subscription plans for the optional "activate plan" selector
+  useEffect(() => {
+    if (!open) return
+    let ignoreResult = false
+    getAdminPlans()
+      .then((res) => {
+        if (!ignoreResult && res.success) {
+          setPlans(res.data || [])
+        }
+      })
+      .catch(() => {
+        // Non-fatal: plan selector just stays empty
+      })
+    return () => {
+      ignoreResult = true
+    }
+  }, [open])
 
   // Load existing data when updating
   useEffect(() => {
@@ -311,6 +340,69 @@ export function RedemptionsMutateDrawer({
                           : t('Enter the quota amount in {{currency}}', {
                               currency: currencyLabel,
                             })}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='plan_id'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('Activate Subscription Plan')}</FormLabel>
+                      <FormControl>
+                        <Select
+                          items={[
+                            {
+                              value: 'none',
+                              label: t('None (credit quota only)'),
+                            },
+                            ...(plans || []).map((p) => ({
+                              value: String(p.plan?.id || ''),
+                              label: p.plan?.title || String(p.plan?.id || ''),
+                            })),
+                          ]}
+                          value={
+                            field.value ? String(field.value) : 'none'
+                          }
+                          onValueChange={(v) =>
+                            field.onChange(
+                              v === 'none' || v === null ? undefined : Number(v)
+                            )
+                          }
+                          disabled={isUpdate}
+                        >
+                          <SelectTrigger className='w-full'>
+                            <SelectValue
+                              placeholder={t('None (credit quota only)')}
+                            />
+                          </SelectTrigger>
+                          <SelectContent alignItemWithTrigger={false}>
+                            <SelectGroup>
+                              <SelectItem value='none'>
+                                {t('None (credit quota only)')}
+                              </SelectItem>
+                              {(plans || []).map((p) => (
+                                <SelectItem
+                                  key={p.plan?.id}
+                                  value={String(p.plan?.id || '')}
+                                >
+                                  {p.plan?.title || String(p.plan?.id || '')} (
+                                  ${Number(p.plan?.price_amount || 0).toFixed(0)}
+                                  /{p.plan?.duration_value || 1}
+                                  {p.plan?.duration_unit || 'month'})
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormDescription>
+                        {t(
+                          'Optional: redeeming this code directly activates the selected subscription plan instead of adding quota.'
+                        )}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
