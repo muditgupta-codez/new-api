@@ -38,3 +38,41 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Deploy to Coolify
+        if: ${{ secrets.COOLIFY_API_KEY != '' }}
+        env:
+          COOLIFY_API_KEY: ${{ secrets.COOLIFY_API_KEY }}
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL || 'http://169.58.74.130:8000/api/v1' }}
+          ZESKAI_APP: ${{ secrets.ZESKAI_APP_UUID || 'hjauinp5yio5n0r0waknjb7f' }}
+        run: |
+          set -e
+          echo "Triggering Coolify deploy for $ZESKAI_APP..."
+          RESP=$(curl -sS -X POST "$COOLIFY_URL/deploy" \
+            -H "Authorization: Bearer $COOLIFY_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"uuid\": \"$ZESKAI_APP\", \"force\": true}")
+          echo "Trigger response: $RESP"
+          DEP_UUID=$(echo "$RESP" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('deployments',[{}])[0].get('deployment_uuid',''))")
+          if [ -z "$DEP_UUID" ]; then
+            echo "::error::No deployment uuid in response"
+            exit 1
+          fi
+          echo "Deployment uuid: $DEP_UUID"
+          # Poll until finished (max ~10 min)
+          for i in $(seq 1 60); do
+            STATUS=$(curl -sS "$COOLIFY_URL/deployments/$DEP_UUID" \
+              -H "Authorization: Bearer $COOLIFY_API_KEY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('status',''))")
+            echo "poll $i: status=$STATUS"
+            if [ "$STATUS" = "finished" ]; then
+              echo "Deploy finished."
+              exit 0
+            fi
+            if [ "$STATUS" = "failed" ]; then
+              echo "::error::Coolify deploy failed"
+              exit 1
+            fi
+            sleep 10
+          done
+          echo "::error::Coolify deploy timed out"
+          exit 1
