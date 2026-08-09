@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/QuantumNous/new-api/common"
@@ -105,21 +106,68 @@ func AddRedemption(c *gin.Context) {
 			return
 		}
 	}
+	// Optional short-code prefix: generates keys like "SP-AB2CD3" instead of
+	// 32-char UUIDs. Letters, digits and hyphens only, max 10 chars.
+	if redemption.KeyPrefix != "" {
+		redemption.KeyPrefix = strings.ToUpper(strings.TrimSpace(redemption.KeyPrefix))
+		if len(redemption.KeyPrefix) > 10 {
+			c.JSON(http.StatusOK, gin.H{"success": false, "message": "兑换码前缀过长（最多10个字符）"})
+			return
+		}
+		for _, ch := range redemption.KeyPrefix {
+			if !(ch >= 'A' && ch <= 'Z' || ch >= '0' && ch <= '9' || ch == '-') {
+				c.JSON(http.StatusOK, gin.H{"success": false, "message": "兑换码前缀只能包含字母、数字和连字符"})
+				return
+			}
+		}
+	}
 	var keys []string
 	for i := 0; i < redemption.Count; i++ {
-		key := common.GetUUID()
-		cleanRedemption := model.Redemption{
-			UserId:      c.GetInt("id"),
-			Name:        redemption.Name,
-			Key:         key,
-			CreatedTime: common.GetTimestamp(),
-			Quota:       redemption.Quota,
-			PlanId:      redemption.PlanId,
-			ExpiredTime: redemption.ExpiredTime,
+		key := ""
+		inserted := false
+		for attempt := 0; attempt < 10 && !inserted; attempt++ {
+			if redemption.KeyPrefix != "" {
+				shortKey, err := model.GenerateShortKey(redemption.KeyPrefix)
+				if err != nil {
+					common.SysError("failed to generate short key: " + err.Error())
+					c.JSON(http.StatusOK, gin.H{
+						"success": false,
+						"message": i18n.T(c, i18n.MsgRedemptionCreateFailed),
+						"data":    keys,
+					})
+					return
+				}
+				key = shortKey
+			} else {
+				key = common.GetUUID()
+			}
+			cleanRedemption := model.Redemption{
+				UserId:      c.GetInt("id"),
+				Name:        redemption.Name,
+				Key:         key,
+				CreatedTime: common.GetTimestamp(),
+				Quota:       redemption.Quota,
+				PlanId:      redemption.PlanId,
+				ExpiredTime: redemption.ExpiredTime,
+			}
+			err = cleanRedemption.Insert()
+			if err != nil {
+				// Duplicate key on a short code (rare) → regenerate and retry.
+				if redemption.KeyPrefix != "" && model.RedemptionKeyExists(key) {
+					continue
+				}
+				common.SysError("failed to insert redemption: " + err.Error())
+				c.JSON(http.StatusOK, gin.H{
+					"success": false,
+					"message": i18n.T(c, i18n.MsgRedemptionCreateFailed),
+					"data":    keys,
+				})
+				return
+			}
+			inserted = true
 		}
-		err = cleanRedemption.Insert()
-		if err != nil {
-			common.SysError("failed to insert redemption: " + err.Error())
+		if !inserted {
+			common.SysError("failed to insert redemption after retries")
 			c.JSON(http.StatusOK, gin.H{
 				"success": false,
 				"message": i18n.T(c, i18n.MsgRedemptionCreateFailed),

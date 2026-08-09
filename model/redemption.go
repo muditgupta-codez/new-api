@@ -1,9 +1,12 @@
 package model
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
+	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/logger"
@@ -14,11 +17,12 @@ import (
 type Redemption struct {
 	Id           int            `json:"id"`
 	UserId       int            `json:"user_id"`
-	Key          string         `json:"key" gorm:"type:char(32);uniqueIndex"`
+	Key          string         `json:"key" gorm:"type:varchar(64);uniqueIndex"`
 	Status       int            `json:"status" gorm:"default:1"`
 	Name         string         `json:"name" gorm:"index"`
 	Quota        int            `json:"quota" gorm:"default:100"`
 	PlanId       int            `json:"plan_id" gorm:"default:0"` // >0: redeem activates this subscription plan instead of crediting quota
+	KeyPrefix    string         `json:"key_prefix" gorm:"-"`       // api-request only: generate short codes like "SP-AB12CD"
 	CreatedTime  int64          `json:"created_time" gorm:"bigint"`
 	RedeemedTime int64          `json:"redeemed_time" gorm:"bigint"`
 	Count        int            `json:"count" gorm:"-:all"` // only for api request
@@ -33,6 +37,29 @@ type RedeemResult struct {
 	Quota     int    `json:"quota"`
 	PlanId    int    `json:"plan_id"`
 	PlanTitle string `json:"plan_title"`
+}
+
+// shortCodeCharset avoids visually ambiguous characters (0/O, 1/I/L).
+const shortCodeCharset = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+
+// GenerateShortKey builds a short, human-friendly redemption key, e.g.
+// "SP-AB2CD3". The 6 random chars come from a 30-char unambiguous charset
+// (30^6 ≈ 729M combinations, collision-checked by the caller).
+func GenerateShortKey(prefix string) (string, error) {
+	cleanPrefix := strings.ToUpper(strings.TrimSpace(prefix))
+	if cleanPrefix == "" {
+		cleanPrefix = "ZSK"
+	}
+	maxI := big.NewInt(int64(len(shortCodeCharset)))
+	buf := make([]byte, 6)
+	for i := range buf {
+		n, err := rand.Int(rand.Reader, maxI)
+		if err != nil {
+			return "", err
+		}
+		buf[i] = shortCodeCharset[n.Int64()]
+	}
+	return cleanPrefix + "-" + string(buf), nil
 }
 
 func GetAllRedemptions(startIdx int, num int) (redemptions []*Redemption, total int64, err error) {
@@ -150,6 +177,8 @@ func Redeem(key string, userId int) (result *RedeemResult, err error) {
 	if userId == 0 {
 		return nil, errors.New("无效的 user id")
 	}
+	// Short codes are stored uppercase; accept any casing from the user.
+	key = strings.ToUpper(strings.TrimSpace(key))
 	redemption := &Redemption{}
 
 	keyCol := "`key`"
@@ -159,7 +188,7 @@ func Redeem(key string, userId int) (result *RedeemResult, err error) {
 	common.RandomSleep()
 	var redeemResult *RedeemResult
 	err = DB.Transaction(func(tx *gorm.DB) error {
-		err := lockForUpdate(tx).Where(keyCol+" = ?", key).First(redemption).Error
+		err := lockForUpdate(tx).Where("UPPER("+keyCol+") = ?", key).First(redemption).Error
 		if err != nil {
 			return errors.New("无效的兑换码")
 		}
@@ -234,6 +263,18 @@ func (redemption *Redemption) Insert() error {
 	var err error
 	err = DB.Create(redemption).Error
 	return err
+}
+
+// RedemptionKeyExists reports whether a (non-deleted) redemption key is
+// already in use. Used for short-code collision retry.
+func RedemptionKeyExists(key string) bool {
+	var count int64
+	keyCol := "`key`"
+	if common.UsingMainDatabase(common.DatabaseTypePostgreSQL) {
+		keyCol = `"key"`
+	}
+	DB.Model(&Redemption{}).Where(keyCol+" = ?", key).Count(&count)
+	return count > 0
 }
 
 func (redemption *Redemption) SelectUpdate() error {

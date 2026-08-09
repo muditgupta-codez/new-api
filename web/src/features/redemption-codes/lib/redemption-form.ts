@@ -43,6 +43,11 @@ export function getRedemptionFormSchema(t: TFunction) {
       .max(REDEMPTION_VALIDATION.NAME_MAX_LENGTH, msg.NAME_LENGTH_INVALID),
     quota_dollars: z.number().min(0, t('Quota must be a positive number')),
     plan_id: z.number().optional(),
+    key_prefix: z
+      .string()
+      .max(10, t('Code prefix must be at most 10 characters'))
+      .regex(/^[A-Za-z0-9-]*$/, t('Code prefix may only contain letters, numbers and hyphens'))
+      .optional(),
     expired_time: z.date().optional(),
     count: z
       .number()
@@ -56,6 +61,7 @@ export type RedemptionFormValues = {
   name: string
   quota_dollars: number
   plan_id?: number
+  key_prefix?: string
   expired_time?: Date
   count?: number
 }
@@ -68,6 +74,7 @@ export const REDEMPTION_FORM_DEFAULT_VALUES: RedemptionFormValues = {
   name: '',
   quota_dollars: 10,
   plan_id: undefined,
+  key_prefix: '',
   expired_time: undefined,
   count: 1,
 }
@@ -86,6 +93,7 @@ export function transformFormDataToPayload(
     name: data.name,
     quota: data.plan_id ? 0 : parseQuotaFromDollars(data.quota_dollars),
     plan_id: data.plan_id || 0,
+    key_prefix: data.key_prefix?.trim() || undefined,
     expired_time: data.expired_time
       ? Math.floor(data.expired_time.getTime() / 1000)
       : 0,
@@ -103,6 +111,7 @@ export function transformRedemptionToFormDefaults(
     name: redemption.name,
     quota_dollars: quotaUnitsToEditableAmount(redemption.quota),
     plan_id: redemption.plan_id || undefined,
+    key_prefix: '',
     expired_time:
       redemption.expired_time > 0
         ? new Date(redemption.expired_time * 1000)

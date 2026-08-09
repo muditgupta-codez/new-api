@@ -5254,6 +5254,11 @@
     "Optional: redeeming this code directly activates the selected subscription plan instead of adding quota.": "Optional: redeeming this code directly activates the selected subscription plan instead of adding quota.",
     "Grant": "Grant",
     "Plan #{{id}}": "Plan #{{id}}",
-    "Subscription activated: {{plan}}": "Subscription activated: {{plan}}"
+    "Subscription activated: {{plan}}": "Subscription activated: {{plan}}",
+    "Code Prefix": "Code Prefix",
+    "Optional, e.g. SP": "Optional, e.g. SP",
+    "Optional: generates short codes like SP-AB2CD3 instead of long random keys. Only for new codes.": "Optional: generates short codes like SP-AB2CD3 instead of long random keys. Only for new codes.",
+    "Code prefix must be at most 10 characters": "Code prefix must be at most 10 characters",
+    "Code prefix may only contain letters, numbers and hyphens": "Code prefix may only contain letters, numbers and hyphens"
   }
 }

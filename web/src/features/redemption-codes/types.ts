@@ -76,6 +76,7 @@ export interface RedemptionFormData {
   name: string
   quota: number
   plan_id?: number // >0: code activates this subscription plan instead of crediting quota
+  key_prefix?: string // optional: generates short codes like "SP-AB2CD3" (create only)
   expired_time: number
   count?: number // Only for create
   status?: number // Only for status update

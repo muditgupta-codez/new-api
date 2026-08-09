@@ -411,6 +411,29 @@ export function RedemptionsMutateDrawer({
 
                 <FormField
                   control={form.control}
+                  name='key_prefix'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('Code Prefix')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder={t('Optional, e.g. SP')}
+                          disabled={isUpdate}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        {t(
+                          'Optional: generates short codes like SP-AB2CD3 instead of long random keys. Only for new codes.'
+                        )}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name='expired_time'
                   render={({ field }) => (
                     <FormItem>
