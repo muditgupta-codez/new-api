@@ -17,14 +17,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link } from '@tanstack/react-router'
-import { Check, Sparkles } from 'lucide-react'
+import { Check, Loader2, Sparkles } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { getPublicPlans, paySubscriptionStripe } from '@/features/subscriptions/api'
+import type { PlanRecord } from '@/features/subscriptions/types'
 import { useAuthStore } from '@/stores/auth-store'
 
 interface Plan {
-  name: string
+  nameKey: string
   price: string
   period: string
   tagline: string
@@ -38,9 +42,68 @@ export function PlansSection() {
   const { auth } = useAuthStore()
   const isAuthenticated = !!auth.user
 
+  const [publicPlans, setPublicPlans] = useState<PlanRecord[]>([])
+  const [payingPlan, setPayingPlan] = useState<string | null>(null)
+
+  // The public plans endpoint requires auth; we only need plan ids to
+  // launch the Stripe checkout for signed-in users.
+  useEffect(() => {
+    if (!isAuthenticated) return
+    let cancelled = false
+    getPublicPlans()
+      .then((res) => {
+        if (!cancelled && res.success) setPublicPlans(res.data || [])
+      })
+      .catch(() => {
+        // Non-fatal: CTAs fall back to /wallet when plans can't be loaded.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [isAuthenticated])
+
+  // Map a marketing card to its backend plan by (English) title — matched
+  // against the untranslated nameKey so locale doesn't break the lookup.
+  const findBackendPlan = (nameKey: string) =>
+    publicPlans.find((p) => p.plan?.title === nameKey)?.plan
+
+  // When signed in, kick off the Stripe subscription checkout directly.
+  // In-tab redirect (not window.open) — the user-gesture context is lost
+  // across the await, so a popup would be blocked. Stripe returns the user
+  // to /wallet on success/cancel.
+  const handleSubscribe = async (plan: Plan) => {
+    if (!isAuthenticated) {
+      return
+    }
+    const backendPlan = findBackendPlan(plan.nameKey)
+    if (!backendPlan?.id) {
+      window.location.href = '/wallet'
+      return
+    }
+    setPayingPlan(plan.nameKey)
+    try {
+      const res = await paySubscriptionStripe({ plan_id: backendPlan.id })
+      if (res.message === 'success' && res.data?.pay_link) {
+        window.location.href = res.data.pay_link
+      } else {
+        toast.error(
+          res.message && res.message !== 'success'
+            ? res.message
+            : t('Payment request failed')
+        )
+      }
+    } catch {
+      toast.error(t('Payment request failed'))
+    } finally {
+      setPayingPlan(null)
+    }
+  }
+
+  const isPaying = (nameKey: string) => payingPlan === nameKey
+
   const plans: Plan[] = [
     {
-      name: t('Starter'),
+      nameKey: 'Starter',
       price: '$9',
       period: t('/month'),
       tagline: t('For solo devs who want one reliable key'),
@@ -53,7 +116,7 @@ export function PlansSection() {
       ],
     },
     {
-      name: t('Pro'),
+      nameKey: 'Pro',
       price: '$49',
       period: t('/month'),
       tagline: t('Frontier models for serious AI-assisted dev'),
@@ -67,7 +130,7 @@ export function PlansSection() {
       ],
     },
     {
-      name: t('Team'),
+      nameKey: 'Team',
       price: '$149',
       period: t('/month'),
       tagline: t('For teams shipping with AI every day'),
@@ -100,7 +163,7 @@ export function PlansSection() {
       <div className='grid gap-5 md:grid-cols-3'>
         {plans.map((plan) => (
           <div
-            key={plan.name}
+            key={plan.nameKey}
             className={`relative flex flex-col rounded-2xl border p-6 transition-shadow ${
               plan.highlighted
                 ? 'border-blue-500/40 bg-blue-500/[0.03] shadow-[0_8px_40px_-12px_rgba(59,130,246,0.25)]'
@@ -113,7 +176,7 @@ export function PlansSection() {
                 {t('Most Popular')}
               </span>
             )}
-            <h3 className='text-sm font-semibold'>{plan.name}</h3>
+            <h3 className='text-sm font-semibold'>{t(plan.nameKey)}</h3>
             <div className='mt-2 flex items-baseline gap-1'>
               <span className='text-3xl font-bold tracking-tight'>
                 {plan.price}
@@ -138,11 +201,17 @@ export function PlansSection() {
             <Button
               className='mt-6 w-full'
               variant={plan.highlighted ? 'default' : 'outline'}
+              disabled={isPaying(plan.nameKey)}
+              onClick={() => handleSubscribe(plan)}
               render={
-                <Link to={isAuthenticated ? '/wallet' : '/sign-up'} />
+                !isAuthenticated ? <Link to='/sign-up' /> : undefined
               }
             >
-              {plan.cta}
+              {isPaying(plan.nameKey) ? (
+                <Loader2 className='size-4 animate-spin' />
+              ) : (
+                plan.cta
+              )}
             </Button>
           </div>
         ))}
