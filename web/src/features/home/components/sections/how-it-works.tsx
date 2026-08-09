@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Settings, Zap, BarChart3 } from 'lucide-react'
+import { KeyRound, Plug, Rocket } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { AnimateInView } from '@/components/animate-in-view'
@@ -27,25 +27,27 @@ export function HowItWorks() {
   const steps = [
     {
       num: '1',
-      title: t('Configure'),
+      title: t('Pick a plan'),
       desc: t(
-        'Add your API keys, set up channels and configure access permissions'
+        'Choose a subscription that fits how you code. No credit card surprises, no setup fees.'
       ),
-      icon: <Settings className='size-6' strokeWidth={1.5} />,
+      icon: <KeyRound className='size-6' strokeWidth={1.5} />,
     },
     {
       num: '2',
-      title: t('Connect'),
+      title: t('Grab your key'),
       desc: t(
-        'Connect through OpenAI, Claude, Gemini, and other compatible API routes'
+        'One OpenAI-compatible API key, generated instantly in your dashboard.'
       ),
-      icon: <Zap className='size-6' strokeWidth={1.5} />,
+      icon: <Plug className='size-6' strokeWidth={1.5} />,
     },
     {
       num: '3',
-      title: t('Monitor'),
-      desc: t('Track usage, costs and performance with real-time analytics'),
-      icon: <BarChart3 className='size-6' strokeWidth={1.5} />,
+      title: t('Ship faster'),
+      desc: t(
+        'Point opencode, Cline, Continue or Cursor at Zeskai and start building with every model.'
+      ),
+      icon: <Rocket className='size-6' strokeWidth={1.5} />,
     },
   ]
 
@@ -57,7 +59,7 @@ export function HowItWorks() {
             {t('How It Works')}
           </p>
           <h2 className='text-2xl font-bold tracking-tight md:text-3xl'>
-            {t('Three steps to get started')}
+            {t('From signup to shipping in minutes')}
           </h2>
         </AnimateInView>
 

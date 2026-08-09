@@ -118,11 +118,20 @@ if (!rootElement) {
   try {
     if (typeof window === 'undefined' || typeof document === 'undefined') return
     const apply = (name: string) => {
-      document.title = name
+      const inAuth =
+        typeof window !== 'undefined' &&
+        /^\/(sign-in|sign-up|setup)\/?$/.test(window.location.pathname)
+      document.title = inAuth
+        ? name
+        : `${name} — AI API Subscription for Developers`
       const metaTitle = document.querySelector(
         'meta[name="title"]'
       ) as HTMLMetaElement | null
-      if (metaTitle) metaTitle.setAttribute('content', name)
+      if (metaTitle)
+        metaTitle.setAttribute(
+          'content',
+          `${name} — AI API Subscription for Developers`
+        )
     }
     // Cache-first
     try {

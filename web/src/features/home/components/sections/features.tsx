@@ -39,17 +39,17 @@ export function Features(_props: FeaturesProps) {
 
   const features = [
     {
-      id: 'fast',
+      id: 'one-key',
       num: '01',
-      title: t('Lightning Fast'),
+      title: t('One key. Every model.'),
       desc: t(
-        'Optimized network architecture ensures millisecond response times'
+        'A single OpenAI-compatible API key unlocks Claude, GPT, Gemini, DeepSeek, Qwen, GLM, Kimi and more. Swap models without touching your code.'
       ),
       span: 'md:col-span-2',
       icon: <Zap className='size-4 text-blue-400' />,
       visual: (
         <div className='mt-4 grid grid-cols-3 gap-2'>
-          {['OpenAI', 'Claude', 'Gemini', 'DeepSeek', 'Qwen', 'Llama'].map(
+          {['Claude', 'GPT', 'Gemini', 'DeepSeek', 'Qwen', 'GLM'].map(
             (name) => (
               <div
                 key={name}
@@ -63,19 +63,19 @@ export function Features(_props: FeaturesProps) {
       ),
     },
     {
-      id: 'secure',
+      id: 'flat-pricing',
       num: '02',
-      title: t('Secure & Reliable'),
+      title: t('Flat monthly pricing'),
       desc: t(
-        'Enterprise-grade security with comprehensive permission management'
+        'Pay one predictable price. Generous quotas, no per-token meter running in your head, no surprise invoices.'
       ),
       span: 'md:col-span-1',
-      icon: <Shield className='size-4 text-emerald-400' />,
+      icon: <DollarSign className='size-4 text-emerald-400' />,
       visual: (
         <div className='mt-4 flex items-center justify-center'>
           <div className='relative'>
             <div className='flex size-16 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/5'>
-              <Shield
+              <DollarSign
                 className='size-7 text-emerald-500/70'
                 strokeWidth={1.5}
               />
@@ -100,45 +100,47 @@ export function Features(_props: FeaturesProps) {
       ),
     },
     {
-      id: 'global',
+      id: 'tools',
       num: '03',
-      title: t('Global Coverage'),
-      desc: t('Multi-region deployment for stable global access'),
+      title: t('Works with your stack'),
+      desc: t(
+        'Drop-in compatible with opencode, Cline, Continue, Cursor, VS Code and any OpenAI-compatible client.'
+      ),
       span: 'md:col-span-1',
-      icon: <Globe className='size-4 text-violet-400' />,
+      icon: <Code className='size-4 text-violet-400' />,
       visual: (
         <div className='mt-4 space-y-2'>
-          {[t('Load Balancing'), t('Rate Limiting'), t('Cost Tracking')].map(
-            (step, i) => (
-              <div key={step} className='flex items-center gap-2'>
-                <div
-                  className={`flex size-6 items-center justify-center rounded-full text-[10px] font-bold ${
-                    i === 1
-                      ? 'border border-blue-500/30 bg-blue-500/20 text-blue-500'
-                      : 'border-border/40 bg-muted text-muted-foreground border'
-                  }`}
-                >
-                  {i + 1}
-                </div>
-                <div className='bg-border/40 h-px flex-1' />
-                <span className='text-muted-foreground text-xs'>{step}</span>
+          {[t('opencode'), t('Cline'), t('Continue')].map((step, i) => (
+            <div key={step} className='flex items-center gap-2'>
+              <div
+                className={`flex size-6 items-center justify-center rounded-full text-[10px] font-bold ${
+                  i === 1
+                    ? 'border border-blue-500/30 bg-blue-500/20 text-blue-500'
+                    : 'border-border/40 bg-muted text-muted-foreground border'
+                }`}
+              >
+                {i + 1}
               </div>
-            )
-          )}
+              <div className='bg-border/40 h-px flex-1' />
+              <span className='text-muted-foreground text-xs'>{step}</span>
+            </div>
+          ))}
         </div>
       ),
     },
     {
-      id: 'developer',
+      id: 'usage',
       num: '04',
-      title: t('Developer Friendly'),
-      desc: t('Compatible API routes for common AI application workflows'),
+      title: t('Usage you can see'),
+      desc: t(
+        'A clean dashboard shows what you consumed, what your plan covers, and per-model breakdowns.'
+      ),
       span: 'md:col-span-2',
-      icon: <Code className='size-4 text-amber-400' />,
+      icon: <Gauge className='size-4 text-amber-400' />,
       visual: (
         <div className='mt-4 flex items-center gap-3'>
           <div className='flex -space-x-2'>
-            {['API', 'SDK', 'CLI', 'Docs'].map((n) => (
+            {['M', 'K', 'U', 'Q'].map((n) => (
               <div
                 key={n}
                 className='border-background from-muted to-muted/60 text-muted-foreground flex size-8 items-center justify-center rounded-full border-2 bg-gradient-to-br text-[9px] font-bold'
@@ -148,8 +150,8 @@ export function Features(_props: FeaturesProps) {
             ))}
           </div>
           <div className='text-muted-foreground flex items-center gap-1.5 text-xs'>
-            <Code className='size-3.5 text-blue-500' />
-            {t('Multi-protocol Compatible')}
+            <Gauge className='size-3.5 text-blue-500' />
+            {t('Real-time quota & spend tracking')}
           </div>
         </div>
       ),
@@ -158,24 +160,24 @@ export function Features(_props: FeaturesProps) {
 
   const additionalFeatures = [
     {
-      icon: <Gauge className='size-5' strokeWidth={1.5} />,
-      title: t('High Performance'),
-      desc: t('Support for high concurrency with automatic load balancing'),
+      icon: <Shield className='size-5' strokeWidth={1.5} />,
+      title: t('Secure by default'),
+      desc: t('Per-user keys with scopes, rate limits and instant revocation'),
     },
     {
-      icon: <DollarSign className='size-5' strokeWidth={1.5} />,
-      title: t('Transparent Billing'),
-      desc: t('Pay-as-you-go with real-time usage monitoring'),
+      icon: <Globe className='size-5' strokeWidth={1.5} />,
+      title: t('Fast & reliable'),
+      desc: t('Load-balanced upstreams with automatic failover'),
     },
     {
       icon: <Users className='size-5' strokeWidth={1.5} />,
-      title: t('Team Collaboration'),
-      desc: t('Multi-user management with flexible permission allocation'),
+      title: t('Team ready'),
+      desc: t('Workspaces with per-member keys and group quotas'),
     },
     {
       icon: <HeartHandshake className='size-5' strokeWidth={1.5} />,
-      title: t('Open Source'),
-      desc: t('Community driven, self-hosted, and extensible'),
+      title: t('No lock-in'),
+      desc: t('Standard OpenAI protocol — leave anytime, your code stays'),
     },
   ]
 
@@ -184,12 +186,12 @@ export function Features(_props: FeaturesProps) {
       <div className='mx-auto max-w-6xl'>
         <AnimateInView className='mb-16 max-w-lg'>
           <p className='text-muted-foreground mb-3 text-xs font-medium tracking-widest uppercase'>
-            {t('Core Features')}
+            {t('Why Zeskai')}
           </p>
           <h2 className='text-2xl leading-tight font-bold tracking-tight md:text-3xl'>
-            {t('Built for developers,')}
+            {t('Stop managing keys.')}
             <br />
-            {t('designed for scale')}
+            {t('Start shipping code.')}
           </h2>
         </AnimateInView>
 
