@@ -40,7 +40,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Deploy to Coolify
-        if: ${{ secrets.COOLIFY_API_KEY != '' }}
+        if: ${{ env.COOLIFY_API_KEY != '' }}
         env:
           COOLIFY_API_KEY: ${{ secrets.COOLIFY_API_KEY }}
           COOLIFY_URL: ${{ secrets.COOLIFY_URL || 'http://169.58.74.130:8000/api/v1' }}
