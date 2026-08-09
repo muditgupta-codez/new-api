@@ -5259,6 +5259,10 @@
     "Optional, e.g. SP": "Optional, e.g. SP",
     "Optional: generates short codes like SP-AB2CD3 instead of long random keys. Only for new codes.": "Optional: generates short codes like SP-AB2CD3 instead of long random keys. Only for new codes.",
     "Code prefix must be at most 10 characters": "Code prefix must be at most 10 characters",
-    "Code prefix may only contain letters, numbers and hyphens": "Code prefix may only contain letters, numbers and hyphens"
+    "Code prefix may only contain letters, numbers and hyphens": "Code prefix may only contain letters, numbers and hyphens",
+    "Empty = all models": "Empty = all models",
+    "{{count}} selected": "{{count}} selected",
+    "No models found. Add a channel first.": "No models found. Add a channel first.",
+    "Models this plan may call. Leave empty to allow all models. Users are blocked from models outside their plan.": "Models this plan may call. Leave empty to allow all models. Users are blocked from models outside their plan."
   }
 }

@@ -22,7 +22,7 @@ type Redemption struct {
 	Name         string         `json:"name" gorm:"index"`
 	Quota        int            `json:"quota" gorm:"default:100"`
 	PlanId       int            `json:"plan_id" gorm:"default:0"` // >0: redeem activates this subscription plan instead of crediting quota
-	KeyPrefix    string         `json:"key_prefix" gorm:"-"`       // api-request only: generate short codes like "SP-AB12CD"
+	KeyPrefix    string         `json:"key_prefix" gorm:"-"`      // api-request only: generate short codes like "SP-AB12CD"
 	CreatedTime  int64          `json:"created_time" gorm:"bigint"`
 	RedeemedTime int64          `json:"redeemed_time" gorm:"bigint"`
 	Count        int            `json:"count" gorm:"-:all"` // only for api request

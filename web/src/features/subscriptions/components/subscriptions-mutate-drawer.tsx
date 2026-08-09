@@ -31,7 +31,9 @@ import {
   sideDrawerHeaderClassName,
   sideDrawerSwitchItemClassName,
 } from '@/components/drawer-layout'
+import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Form,
   FormControl,
@@ -100,6 +102,7 @@ export function SubscriptionsMutateDrawer({
   const currencyLabel = getCurrencyLabel()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [groupOptions, setGroupOptions] = useState<string[]>([])
+  const [availableModels, setAvailableModels] = useState<string[]>([])
   const [creatingPancakeProduct, setCreatingPancakeProduct] = useState(false)
   const [pancakeProducts, setPancakeProducts] = useState<
     { id: string; name: string; status: string }[]
@@ -121,6 +124,26 @@ export function SubscriptionsMutateDrawer({
       getGroups()
         .then((res) => {
           if (res.success) setGroupOptions(res.data || [])
+        })
+        .catch(() => {})
+      // Load available model names from all enabled channels for the
+      // Model Access editor.
+      api
+        .get('/api/channel', { params: { page: 1, page_size: 100 } })
+        .then((res) => {
+          const items = res.data?.data?.items
+          if (Array.isArray(items)) {
+            const models = new Set<string>()
+            for (const ch of items) {
+              if (ch.status !== 1) continue
+              for (const m of String(ch.models || '')
+                .split(',')
+                .map((s) => s.trim())) {
+                if (m) models.add(m)
+              }
+            }
+            setAvailableModels([...models].sort())
+          }
         })
         .catch(() => {})
       // Best-effort — empty list still lets the operator use "+ Create".
@@ -385,6 +408,90 @@ export function SubscriptionsMutateDrawer({
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name='model_access'
+                render={({ field }) => {
+                  const selected = field.value || []
+                  return (
+                    <FormItem>
+                      <FormLabel>
+                        {t('Model Access')}
+                        <span className='ml-2 text-xs font-normal text-muted-foreground'>
+                          {t('Empty = all models')}
+                        </span>
+                      </FormLabel>
+                      <FormControl>
+                        <div className='rounded-md border p-3'>
+                          <div className='mb-2 flex flex-wrap gap-2'>
+                            <Button
+                              type='button'
+                              variant='outline'
+                              size='sm'
+                              onClick={() =>
+                                field.onChange([...availableModels])
+                              }
+                            >
+                              {t('Select all')}
+                            </Button>
+                            <Button
+                              type='button'
+                              variant='outline'
+                              size='sm'
+                              onClick={() => field.onChange([])}
+                            >
+                              {t('Clear')}
+                            </Button>
+                            <span className='ml-auto self-center text-xs text-muted-foreground'>
+                              {t('{{count}} selected', {
+                                count: selected.length,
+                              })}
+                            </span>
+                          </div>
+                          {availableModels.length === 0 ? (
+                            <p className='py-2 text-xs text-muted-foreground'>
+                              {t('No models found. Add a channel first.')}
+                            </p>
+                          ) : (
+                            <div className='grid max-h-56 grid-cols-1 gap-1 overflow-y-auto pr-1 sm:grid-cols-2'>
+                              {availableModels.map((m) => {
+                                const checked = selected.includes(m)
+                                return (
+                                  <label
+                                    key={m}
+                                    className='flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-muted'
+                                  >
+                                    <Checkbox
+                                      checked={checked}
+                                      onCheckedChange={(v) => {
+                                        field.onChange(
+                                          v
+                                            ? [...selected, m]
+                                            : selected.filter((x) => x !== m)
+                                        )
+                                      }}
+                                    />
+                                    <span className='truncate font-mono text-xs'>
+                                      {m}
+                                    </span>
+                                  </label>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        {t(
+                          'Models this plan may call. Leave empty to allow all models. Users are blocked from models outside their plan.'
+                        )}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )
+                }}
+              />
 
               <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
                 <FormField

@@ -77,6 +77,27 @@ func Distribute() func(c *gin.Context) {
 				}
 			}
 
+			// Plan-based model gating (tier access): a user may only call
+			// models covered by at least one of their active subscription
+			// plans. Plans with an empty model_access list are unrestricted
+			// (backward compatible with pre-gating plans).
+			if uid := c.GetInt("id"); uid > 0 {
+				allowed, gated, err := model.GetAllowedModelsForUser(uid)
+				if err != nil {
+					common.SysError("plan model gating lookup failed for user " + strconv.Itoa(uid) + ": " + err.Error())
+				} else if gated {
+					requestModel := modelRequest.Model
+					matched := model.ModelAllowedByAccessList(requestModel, allowed)
+					if !matched && requestModel != "" {
+						matched = model.ModelAllowedByAccessList(ratio_setting.FormatMatchingModelName(requestModel), allowed)
+					}
+					if !matched {
+						abortWithOpenAiMessage(c, http.StatusForbidden, fmt.Sprintf("Model '%s' is not included in your current plan. Please upgrade to access it.", requestModel))
+						return
+					}
+				}
+			}
+
 			if shouldSelectChannel {
 				if modelRequest.Model == "" {
 					abortWithOpenAiMessage(c, http.StatusBadRequest, i18n.T(c, i18n.MsgDistributorModelNameRequired))

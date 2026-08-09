@@ -1,8 +1,10 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -184,6 +186,12 @@ type SubscriptionPlan struct {
 	// Quota reset period for plan
 	QuotaResetPeriod        string `json:"quota_reset_period" gorm:"type:varchar(16);default:'never'"`
 	QuotaResetCustomSeconds int64  `json:"quota_reset_custom_seconds" gorm:"type:bigint;default:0"`
+
+	// ModelAccess is a JSON array of model names/patterns this plan may call.
+	// Empty = all models allowed (backward compatible). Enforced in the relay
+	// distributor middleware: a user may only call models covered by at least
+	// one of their active subscription plans.
+	ModelAccess string `json:"model_access" gorm:"type:text"`
 
 	CreatedAt int64 `json:"created_at" gorm:"bigint"`
 	UpdatedAt int64 `json:"updated_at" gorm:"bigint"`
@@ -864,6 +872,97 @@ func HasActiveUserSubscription(userId int) (bool, error) {
 		return false, err
 	}
 	return count > 0, nil
+}
+
+// GetModelAccessList parses the plan's ModelAccess JSON into a slice of model
+// names/patterns. An empty plan field yields an empty list (= all models).
+func (p *SubscriptionPlan) GetModelAccessList() []string {
+	if p == nil || strings.TrimSpace(p.ModelAccess) == "" {
+		return nil
+	}
+	var list []string
+	if err := json.Unmarshal([]byte(p.ModelAccess), &list); err != nil {
+		common.SysError("failed to parse plan model_access for plan " + strconv.Itoa(p.Id) + ": " + err.Error())
+		return nil
+	}
+	return list
+}
+
+// GetActiveSubscriptionPlanIds returns the plan ids of the user's currently
+// active subscriptions (newest first).
+func GetActiveSubscriptionPlanIds(userId int) ([]int, error) {
+	if userId <= 0 {
+		return nil, errors.New("invalid userId")
+	}
+	now := common.GetTimestamp()
+	var subs []UserSubscription
+	if err := DB.Model(&UserSubscription{}).
+		Select("plan_id").
+		Where("user_id = ? AND status = ? AND end_time > ?", userId, "active", now).
+		Order("end_time desc, id desc").
+		Find(&subs).Error; err != nil {
+		return nil, err
+	}
+	planIds := make([]int, 0, len(subs))
+	seen := map[int]bool{}
+	for _, s := range subs {
+		if s.PlanId > 0 && !seen[s.PlanId] {
+			seen[s.PlanId] = true
+			planIds = append(planIds, s.PlanId)
+		}
+	}
+	return planIds, nil
+}
+
+// GetAllowedModelsForUser returns the union of model lists across the user's
+// active subscription plans. gated=false means no restriction applies
+// (no active subscription, or at least one active plan has an empty list).
+func GetAllowedModelsForUser(userId int) (allowed []string, gated bool, err error) {
+	planIds, err := GetActiveSubscriptionPlanIds(userId)
+	if err != nil {
+		return nil, false, err
+	}
+	if len(planIds) == 0 {
+		// No active subscription → no model gating (current behavior preserved).
+		return nil, false, nil
+	}
+	seen := map[string]bool{}
+	for _, planId := range planIds {
+		plan, err := GetSubscriptionPlanById(planId)
+		if err != nil {
+			common.SysError("GetAllowedModelsForUser: plan " + strconv.Itoa(planId) + " not found: " + err.Error())
+			continue
+		}
+		list := plan.GetModelAccessList()
+		if len(list) == 0 {
+			// Plan with empty access list = unrestricted (backward compatible).
+			return nil, false, nil
+		}
+		for _, m := range list {
+			m = strings.TrimSpace(m)
+			if m != "" && !seen[m] {
+				seen[m] = true
+				allowed = append(allowed, m)
+			}
+		}
+	}
+	return allowed, true, nil
+}
+
+// ModelAllowedByAccessList reports whether a model name is covered by an
+// access list. Supports exact names and '*' wildcard patterns (e.g. "kimi-*").
+func ModelAllowedByAccessList(model string, access []string) bool {
+	for _, pattern := range access {
+		if pattern == model {
+			return true
+		}
+		if strings.Contains(pattern, "*") {
+			if ok, err := path.Match(pattern, model); err == nil && ok {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // UserActiveSubscriptionsAllowWalletOverflow returns whether wallet balance may be used

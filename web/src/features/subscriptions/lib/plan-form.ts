@@ -50,6 +50,8 @@ export function getPlanFormSchema(t: TFunction) {
     stripe_price_id: z.string().optional(),
     creem_product_id: z.string().optional(),
     waffo_pancake_product_id: z.string().optional(),
+    // Model access list (array of model names; empty = all models)
+    model_access: z.array(z.string()).optional(),
   })
 }
 
@@ -75,6 +77,7 @@ export const PLAN_FORM_DEFAULTS: PlanFormValues = {
   stripe_price_id: '',
   creem_product_id: '',
   waffo_pancake_product_id: '',
+  model_access: [],
 }
 
 export function planToFormValues(plan: SubscriptionPlan): PlanFormValues {
@@ -98,6 +101,19 @@ export function planToFormValues(plan: SubscriptionPlan): PlanFormValues {
     stripe_price_id: plan.stripe_price_id || '',
     creem_product_id: plan.creem_product_id || '',
     waffo_pancake_product_id: plan.waffo_pancake_product_id || '',
+    model_access: parseModelAccess(plan.model_access),
+  }
+}
+
+// parseModelAccess converts the plan's JSON-string model list into an array.
+// Empty/absent → [] which means "all models allowed" on the backend.
+function parseModelAccess(raw?: string): string[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed.filter((m) => typeof m === 'string') : []
+  } catch {
+    return []
   }
 }
 
@@ -119,6 +135,8 @@ export function formValuesToPlanPayload(values: PlanFormValues): PlanPayload {
       total_amount: parseQuotaFromDollars(Number(values.total_amount || 0)),
       upgrade_group: values.upgrade_group || '',
       downgrade_group: values.downgrade_group || '',
+      // Empty array → '' → backend treats as unrestricted (all models).
+      model_access: JSON.stringify(values.model_access || []),
     },
   }
 }
