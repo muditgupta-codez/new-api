@@ -104,10 +104,10 @@ export function PlansSection() {
   const plans: Plan[] = [
     {
       nameKey: 'Starter',
-      price: '$9',
+      price: '$18',
       period: t('/month'),
       tagline: t('For solo devs who want one reliable key'),
-      cta: t('Start Free'),
+      cta: t('Get Starter'),
       features: [
         t('Access to open-weight models: DeepSeek, Qwen, GLM, Kimi'),
         t('Generous daily quota — thousands of requests'),
@@ -117,7 +117,7 @@ export function PlansSection() {
     },
     {
       nameKey: 'Pro',
-      price: '$49',
+      price: '$39',
       period: t('/month'),
       tagline: t('Frontier models for serious AI-assisted dev'),
       cta: t('Go Pro'),
@@ -130,11 +130,11 @@ export function PlansSection() {
       ],
     },
     {
-      nameKey: 'Team',
-      price: '$149',
+      nameKey: 'Max',
+      price: '$99',
       period: t('/month'),
       tagline: t('For teams shipping with AI every day'),
-      cta: t('Start Team'),
+      cta: t('Go Max'),
       features: [
         t('Everything in Pro'),
         t('5 member seats with individual keys'),
