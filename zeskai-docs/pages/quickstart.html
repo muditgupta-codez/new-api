@@ -1,0 +1,60 @@
+<h1>Quickstart</h1>
+<p class="lead">Make your first API call in under two minutes.</p>
+
+<h2>1. Get an API key</h2>
+<p>Sign in at <a href="https://zeskai.com" target="_blank" rel="noopener">zeskai.com</a>, open the <strong>Console</strong>, and create a token. Copy it — you'll only see it once.</p>
+
+<h2>2. Make your first request</h2>
+<p>Everything goes through <code>https://zeskai.com/v1</code> with your key as a Bearer token.</p>
+
+<pre><code>curl https://zeskai.com/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "deepseek-v4-flash",
+    "messages": [
+      {"role": "user", "content": "Say hello in 5 words"}
+    ]
+  }'</code></pre>
+
+<p>You should get a response with the model's reply:</p>
+
+<pre><code>{
+  "id": "chatcmpl-...",
+  "model": "deepseek-v4-flash",
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "Hello! How can I help?"
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 12,
+    "completion_tokens": 8,
+    "total_tokens": 20
+  }
+}</code></pre>
+
+<h2>3. Pick a model</h2>
+<p>Swap <code>deepseek-v4-flash</code> for any model in the <a href="/models">catalog</a>. Prices vary per model — see <a href="/pricing">pricing</a>.</p>
+
+<div class="note"><strong>Heads up:</strong> use a cheap model like <code>deepseek-v4-flash</code> (ratio 0.07) while testing. Flagship models like <code>qwen3.8-max</code> cost ~18x more per token.</div>
+
+<h2>4. Use it anywhere</h2>
+<p>Zeskai is OpenAI-compatible, so it drops into any existing OpenAI client by changing the base URL and key:</p>
+
+<pre><code># Python (openai SDK)
+from openai import OpenAI
+client = OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://zeskai.com/v1",
+)
+resp = client.chat.completions.create(
+    model="deepseek-v4-flash",
+    messages=[{"role": "user", "content": "Hello!"}],
+)
+print(resp.choices[0].message.content)</code></pre>
+
+<p>More examples in <a href="/examples">Examples</a>.</p>

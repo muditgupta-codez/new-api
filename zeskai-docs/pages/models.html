@@ -1,0 +1,44 @@
+<h1>Models</h1>
+<p class="lead">Everything available on Zeskai right now. All models support the OpenAI Chat Completions API.</p>
+
+<table>
+  <thead>
+    <tr><th>Model</th><th>Price ratio</th><th>Completion ratio</th><th>Vendor</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>deepseek-v4-flash</code></td><td>0.07</td><td>2</td><td>DeepSeek</td></tr>
+    <tr><td><code>deepseek-v4-pro</code></td><td>0.87</td><td>2</td><td>DeepSeek</td></tr>
+    <tr><td><code>glm-5</code></td><td>0.5</td><td>3.2</td><td>智谱</td></tr>
+    <tr><td><code>glm-5.1</code></td><td>0.7</td><td>3.14</td><td>智谱</td></tr>
+    <tr><td><code>glm-5.2</code></td><td>0.7</td><td>3.14</td><td>智谱</td></tr>
+    <tr><td><code>gpt-5.6-luna</code></td><td>0.1</td><td>6</td><td>OpenAI</td></tr>
+    <tr><td><code>grok-4.5</code></td><td>1</td><td>3</td><td>xAI</td></tr>
+    <tr><td><code>hy3</code></td><td>0.05</td><td>4</td><td></td></tr>
+    <tr><td><code>hy3-preview</code></td><td>0.05</td><td>4</td><td></td></tr>
+    <tr><td><code>kimi-k2.5</code></td><td>0.3</td><td>5</td><td>Moonshot</td></tr>
+    <tr><td><code>kimi-k2.6</code></td><td>0.475</td><td>4.21</td><td>Moonshot</td></tr>
+    <tr><td><code>kimi-k2.7-code</code></td><td>0.475</td><td>4.21</td><td>Moonshot</td></tr>
+    <tr><td><code>kimi-k3</code></td><td>1.5</td><td>5</td><td>Moonshot</td></tr>
+    <tr><td><code>mimo-v2-omni</code></td><td>0.05</td><td>3</td><td></td></tr>
+    <tr><td><code>mimo-v2-pro</code></td><td>0.05</td><td>3</td><td></td></tr>
+    <tr><td><code>mimo-v2.5</code></td><td>0.05</td><td>3</td><td></td></tr>
+    <tr><td><code>mimo-v2.5-pro</code></td><td>0.05</td><td>3</td><td></td></tr>
+    <tr><td><code>minimax-m2.5</code></td><td>0.15</td><td>4</td><td>MiniMax</td></tr>
+    <tr><td><code>minimax-m2.7</code></td><td>0.15</td><td>4</td><td>MiniMax</td></tr>
+    <tr><td><code>minimax-m3</code></td><td>0.15</td><td>4</td><td>MiniMax</td></tr>
+    <tr><td><code>qwen3.5-plus</code></td><td>0.1</td><td>6</td><td>阿里巴巴</td></tr>
+    <tr><td><code>qwen3.6-plus</code></td><td>0.25</td><td>6</td><td>阿里巴巴</td></tr>
+    <tr><td><code>qwen3.7-max</code></td><td>1.25</td><td>3</td><td>阿里巴巴</td></tr>
+    <tr><td><code>qwen3.7-plus</code></td><td>0.2</td><td>4</td><td>阿里巴巴</td></tr>
+    <tr><td><code>qwen3.8-max</code></td><td>1.25</td><td>3</td><td>阿里巴巴</td></tr>
+  </tbody>
+</table>
+
+<div class="note"><strong>What's a ratio?</strong> The price ratio is the multiplier on the base unit rate. Lower = cheaper. The completion ratio is how many times more expensive output tokens are than input tokens. See <a href="/pricing">Pricing</a> for the full formula.</div>
+
+<h2>Endpoint types</h2>
+<p>Every model listed here is served through the OpenAI-compatible endpoint:</p>
+<ul>
+  <li><code>POST /v1/chat/completions</code> — chat (all models)</li>
+  <li><code>POST /v1/responses</code> — Responses API (OpenAI-format models)</li>
+</ul>

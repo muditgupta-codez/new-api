@@ -1,0 +1,50 @@
+<h1>Errors &amp; Limits</h1>
+<p class="lead">Common error codes and what they mean.</p>
+
+<h2>Error format</h2>
+<p>Errors return the OpenAI-style JSON shape:</p>
+
+<pre><code>{
+  "error": {
+    "message": "Insufficient Quota",
+    "type": "insufficient_quota",
+    "code": 402
+  }
+}</code></pre>
+
+<h2>HTTP status codes</h2>
+<table>
+  <thead><tr><th>Code</th><th>Meaning</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td><code>200</code></td><td>Success</td><td>—</td></tr>
+    <tr><td><code>400</code></td><td>Bad request</td><td>Check the request body and model name</td></tr>
+    <tr><td><code>401</code></td><td>Invalid API key</td><td>Check the <code>Authorization</code> header</td></tr>
+    <tr><td><code>402</code></td><td>Insufficient quota</td><td>Top up your balance</td></tr>
+    <tr><td><code>404</code></td><td>Model not found</td><td>Use a model from the <a href="/models">catalog</a></td></tr>
+    <tr><td><code>429</code></td><td>Rate limited</td><td>Slow down; retry with backoff</td></tr>
+    <tr><td><code>500</code></td><td>Upstream error</td><td>Retry; if persistent, ping support</td></tr>
+    <tr><td><code>503</code></td><td>Upstream unavailable</td><td>The model provider is down — retry later</td></tr>
+  </tbody>
+</table>
+
+<h2>Common error messages</h2>
+<table>
+  <thead><tr><th>Message</th><th>What it means</th></tr></thead>
+  <tbody>
+    <tr><td><code>Insufficient Quota</code></td><td>Balance too low to cover the request</td></tr>
+    <tr><td><code>Model Not Found</code></td><td>Unknown or disabled model name</td></tr>
+    <tr><td><code>Unauthorized</code></td><td>Missing/invalid API key</td></tr>
+    <tr><td><code>Endpoint is unavailable</code></td><td>Upstream provider issue — retry later</td></tr>
+    <tr><td><code>Request too large</code></td><td>Input exceeds model context limits</td></tr>
+  </tbody>
+</table>
+
+<h2>Rate limits</h2>
+<ul>
+  <li>Requests are metered per account; sustained bursts may be throttled with <code>429</code></li>
+  <li>Use exponential backoff when retrying (e.g. 1s → 2s → 4s)</li>
+  <li>Prefer streaming for long outputs to stay within limits</li>
+</ul>
+
+<h2>Retry policy</h2>
+<p>Transient errors (<code>429</code>, <code>500</code>, <code>503</code>) usually resolve in seconds. Retry with backoff. If a model stays unavailable, switch to another model from the <a href="/models">catalog</a> — most have close equivalents.</p>

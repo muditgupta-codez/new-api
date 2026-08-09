@@ -1,0 +1,68 @@
+<h1>Pricing</h1>
+<p class="lead">Pay-as-you-go. Every model has a price ratio; your bill is token usage × ratio.</p>
+
+<h2>How billing works</h2>
+<p>Zeskai meters usage in tokens and converts to USD using each model's ratios:</p>
+
+<pre><code>cost = (input_tokens × price_ratio
+        + output_tokens × price_ratio × completion_ratio)
+       × unit_price</code></pre>
+
+<ul>
+  <li><strong>Price ratio</strong> — base multiplier for the model (see table below)</li>
+  <li><strong>Completion ratio</strong> — output tokens cost this many × more than input</li>
+  <li><strong>Unit price</strong> — the platform's base rate per token unit</li>
+</ul>
+
+<h2>Model price ratios</h2>
+<p>Current ratios (lower is cheaper):</p>
+
+<table>
+  <thead>
+    <tr><th>Model</th><th>Price ratio</th><th>Completion ratio</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code><code>deepseek-v4-flash</code></code></td><td>0.07</td><td>2</td></tr>
+    <tr><td><code><code>deepseek-v4-pro</code></code></td><td>0.87</td><td>2</td></tr>
+    <tr><td><code><code>glm-5</code></code></td><td>0.5</td><td>3.2</td></tr>
+    <tr><td><code><code>glm-5.1</code></code></td><td>0.7</td><td>3.14</td></tr>
+    <tr><td><code><code>glm-5.2</code></code></td><td>0.7</td><td>3.14</td></tr>
+    <tr><td><code><code>gpt-5.6-luna</code></code></td><td>0.1</td><td>6</td></tr>
+    <tr><td><code><code>grok-4.5</code></code></td><td>1</td><td>3</td></tr>
+    <tr><td><code><code>hy3</code></code></td><td>0.05</td><td>4</td></tr>
+    <tr><td><code><code>hy3-preview</code></code></td><td>0.05</td><td>4</td></tr>
+    <tr><td><code><code>kimi-k2.5</code></code></td><td>0.3</td><td>5</td></tr>
+    <tr><td><code><code>kimi-k2.6</code></code></td><td>0.475</td><td>4.21</td></tr>
+    <tr><td><code><code>kimi-k2.7-code</code></code></td><td>0.475</td><td>4.21</td></tr>
+    <tr><td><code><code>kimi-k3</code></code></td><td>1.5</td><td>5</td></tr>
+    <tr><td><code><code>mimo-v2-omni</code></code></td><td>0.05</td><td>3</td></tr>
+    <tr><td><code><code>mimo-v2-pro</code></code></td><td>0.05</td><td>3</td></tr>
+    <tr><td><code><code>mimo-v2.5</code></code></td><td>0.05</td><td>3</td></tr>
+    <tr><td><code><code>mimo-v2.5-pro</code></code></td><td>0.05</td><td>3</td></tr>
+    <tr><td><code><code>minimax-m2.5</code></code></td><td>0.15</td><td>4</td></tr>
+    <tr><td><code><code>minimax-m2.7</code></code></td><td>0.15</td><td>4</td></tr>
+    <tr><td><code><code>minimax-m3</code></code></td><td>0.15</td><td>4</td></tr>
+    <tr><td><code><code>qwen3.5-plus</code></code></td><td>0.1</td><td>6</td></tr>
+    <tr><td><code><code>qwen3.6-plus</code></code></td><td>0.25</td><td>6</td></tr>
+    <tr><td><code><code>qwen3.7-max</code></code></td><td>1.25</td><td>3</td></tr>
+    <tr><td><code><code>qwen3.7-plus</code></code></td><td>0.2</td><td>4</td></tr>
+    <tr><td><code><code>qwen3.8-max</code></code></td><td>1.25</td><td>3</td></tr>
+  </tbody>
+</table>
+
+<h2>Cost examples</h2>
+<table>
+  <thead>
+    <tr><th>Model</th><th>1K input tokens</th><th>1K output tokens</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>deepseek-v4-flash</code></td><td>1.00</td><td>2.00</td></tr>
+    <tr><td><code>glm-5.2</code></td><td>1.00</td><td>3.14</td></tr>
+    <tr><td><code>kimi-k3</code></td><td>1.00</td><td>5.00</td></tr>
+    <tr><td><code>qwen3.8-max</code></td><td>1.00</td><td>3.00</td></tr>
+  </tbody>
+</table>
+<p class="note" style="margin-top:0">Units are relative to the platform unit price — multiply by the current unit price to get USD.</p>
+
+<h2>Top-ups</h2>
+<p>Add balance from the dashboard. No subscription required — you only pay for what you use. See <a href="/faq">FAQ</a> for common billing questions.</p>

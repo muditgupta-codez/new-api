@@ -1,0 +1,66 @@
+<h1>API Reference</h1>
+<p class="lead">The Zeskai API is OpenAI-compatible. This page documents the endpoints and key parameters.</p>
+
+<h2>Base URL</h2>
+<pre><code>https://zeskai.com/v1</code></pre>
+
+<h2>Endpoints</h2>
+<table>
+  <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>/v1/chat/completions</code></td><td><span class="pill">POST</span></td><td>Chat completions (all models)</td></tr>
+    <tr><td><code>/v1/responses</code></td><td><span class="pill">POST</span></td><td>Responses API</td></tr>
+    <tr><td><code>/v1/models</code></td><td><span class="pill">GET</span></td><td>List available models</td></tr>
+  </tbody>
+</table>
+
+<h2>POST /v1/chat/completions</h2>
+<p>Standard OpenAI chat request:</p>
+
+<pre><code>{
+  "model": "deepseek-v4-flash",
+  "messages": [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "Explain quantum computing in one sentence."}
+  ],
+  "temperature": 0.7,
+  "max_tokens": 500,
+  "stream": false
+}</code></pre>
+
+<h3>Key parameters</h3>
+<table>
+  <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>model</code></td><td>string</td><td><strong>Required.</strong> Model name from the <a href="/models">catalog</a></td></tr>
+    <tr><td><code>messages</code></td><td>array</td><td><strong>Required.</strong> Chat messages with <code>role</code> and <code>content</code></td></tr>
+    <tr><td><code>temperature</code></td><td>number</td><td>Sampling temperature (0–2). Default varies by model</td></tr>
+    <tr><td><code>max_tokens</code></td><td>integer</td><td>Max output tokens</td></tr>
+    <tr><td><code>stream</code></td><td>boolean</td><td>Stream tokens as SSE (default <code>false</code>)</td></tr>
+    <tr><td><code>top_p</code></td><td>number</td><td>Nucleus sampling</td></tr>
+  </tbody>
+</table>
+
+<h3>Streaming</h3>
+<p>Set <code>"stream": true</code> to receive server-sent events. Each chunk has the standard OpenAI delta format:</p>
+
+<pre><code>data: {"choices":[{"delta":{"content":"Hello"}}]}
+
+data: [DONE]</code></pre>
+
+<h2>POST /v1/responses</h2>
+<p>OpenAI Responses API format (for compatible models):</p>
+
+<pre><code>{
+  "model": "gpt-5.6-luna",
+  "input": "Tell me a fun fact"
+}</code></pre>
+
+<h2>GET /v1/models</h2>
+<p>Lists models available to your account:</p>
+
+<pre><code>curl https://zeskai.com/v1/models \
+  -H "Authorization: Bearer ***</code></pre>
+
+<h2>Authentication</h2>
+<p>Send your API key in the <code>Authorization: Bearer</code> header. See <a href="/authentication">Authentication</a>.</p>

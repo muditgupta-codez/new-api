@@ -1,0 +1,71 @@
+<h1>Examples</h1>
+<p class="lead">Working code snippets for the most common languages and tools.</p>
+
+<h2>curl</h2>
+<pre><code>curl https://zeskai.com/v1/chat/completions \
+  -H "Authorization: Bearer *** \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "glm-5.2",
+    "messages": [{"role": "user", "content": "Write a haiku about APIs"}],
+    "max_tokens": 100
+  }'</code></pre>
+
+<h2>Python (openai SDK)</h2>
+<pre><code>from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://zeskai.com/v1",
+)
+
+resp = client.chat.completions.create(
+    model="kimi-k3",
+    messages=[
+        {"role": "system", "content": "You are a concise assistant."},
+        {"role": "user", "content": "What is 42 in binary?"},
+    ],
+)
+print(resp.choices[0].message.content)</code></pre>
+
+<h2>Python — streaming</h2>
+<pre><code>stream = client.chat.completions.create(
+    model="deepseek-v4-flash",
+    messages=[{"role": "user", "content": "Count from 1 to 10"}],
+    stream=True,
+)
+for chunk in stream:
+    delta = chunk.choices[0].delta.content
+    if delta:
+        print(delta, end="", flush=True)</code></pre>
+
+<h2>Node.js</h2>
+<pre><code>import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: "YOUR_API_KEY",
+  baseURL: "https://zeskai.com/v1",
+});
+
+const resp = await client.chat.completions.create({
+  model: "qwen3.7-plus",
+  messages: [{ role: "user", content: "Hello!" }],
+});
+console.log(resp.choices[0].message.content);</code></pre>
+
+<h2>Responses API</h2>
+<pre><code>curl https://zeskai.com/v1/responses \
+  -H "Authorization: Bearer *** \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.6-luna",
+    "input": "List 3 AI models in one line"
+  }'</code></pre>
+
+<h2>Third-party apps</h2>
+<p>Use Zeskai as a custom provider in any OpenAI-compatible app:</p>
+<ul>
+  <li><strong>Base URL:</strong> <code>https://zeskai.com/v1</code></li>
+  <li><strong>API key:</strong> your Zeskai token</li>
+  <li><strong>Models:</strong> any model from the <a href="/models">catalog</a></li>
+</ul>

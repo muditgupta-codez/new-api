@@ -1,0 +1,35 @@
+<h1>Authentication</h1>
+<p class="lead">All requests are authenticated with your Zeskai API key as a Bearer token.</p>
+
+<h2>Getting a key</h2>
+<ol>
+  <li>Sign in at <a href="https://zeskai.com" target="_blank" rel="noopener">zeskai.com</a></li>
+  <li>Open the <strong>Console → Token</strong> page</li>
+  <li>Click <strong>Add Token</strong>, pick a name and expiry</li>
+  <li>Copy the key immediately — it is shown only once</li>
+</ol>
+
+<h2>Sending the key</h2>
+<p>Add it as an <code>Authorization</code> header:</p>
+
+<pre><code>Authorization: Bearer sk-zeskai-...</code></pre>
+
+<p>Or in an OpenAI client, pass it as <code>api_key</code>:</p>
+
+<pre><code>client = OpenAI(
+    api_key="sk-zeskai-...",
+    base_url="https://zeskai.com/v1",
+)</code></pre>
+
+<h2>Key safety</h2>
+<ul>
+  <li>Keys are charged to your balance — treat them like money</li>
+  <li>Rotate keys regularly from the Token page</li>
+  <li>Never commit keys to source control or share them in public chats</li>
+  <li>Set an expiry on long-lived keys</li>
+</ul>
+
+<h2>Quota &amp; balance</h2>
+<p>Each request deducts from your account balance based on token usage and the model's price ratio. You can top up from the dashboard. If your balance runs out, requests fail with <code>insufficient_quota</code> (402) until you top up.</p>
+
+<div class="note"><strong>Note:</strong> Zeskai bills in USD. One USD of balance ≈ 1 USD of model usage at the published ratios.</div>
