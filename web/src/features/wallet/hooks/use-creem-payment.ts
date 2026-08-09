@@ -37,8 +37,9 @@ export function useCreemPayment() {
       })
 
       if (isApiSuccess(response) && response.data?.checkout_url) {
-        window.open(response.data.checkout_url, '_blank')
-        toast.success(i18next.t('Redirecting to Creem checkout...'))
+        // In-tab redirect (not window.open) — the user-gesture context is
+        // lost across the await, so a popup would be blocked.
+        window.location.href = response.data.checkout_url
         return true
       }
 

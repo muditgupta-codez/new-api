@@ -119,9 +119,10 @@ export function SubscriptionPurchaseDialog(props: Props) {
     try {
       const res = await paySubscriptionStripe({ plan_id: plan.id })
       if (res.message === 'success' && res.data?.pay_link) {
-        window.open(res.data.pay_link, '_blank')
-        toast.success(t('Payment page opened'))
-        props.onOpenChange(false)
+        // In-tab redirect (not window.open) — the user-gesture context is
+        // lost across the await, so a popup would be blocked. Stripe
+        // returns the user to /wallet on success/cancel.
+        window.location.href = res.data.pay_link
       } else {
         toast.error(
           res.message && res.message !== 'success'
@@ -141,9 +142,8 @@ export function SubscriptionPurchaseDialog(props: Props) {
     try {
       const res = await paySubscriptionCreem({ plan_id: plan.id })
       if (res.message === 'success' && res.data?.checkout_url) {
-        window.open(res.data.checkout_url, '_blank')
-        toast.success(t('Payment page opened'))
-        props.onOpenChange(false)
+        // In-tab redirect — same popup-blocker rationale as Stripe above.
+        window.location.href = res.data.checkout_url
       } else {
         toast.error(
           res.message && res.message !== 'success'
