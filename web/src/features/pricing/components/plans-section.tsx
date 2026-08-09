@@ -21,6 +21,7 @@ import { Check, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
+import { useAuthStore } from '@/stores/auth-store'
 
 interface Plan {
   name: string
@@ -34,6 +35,8 @@ interface Plan {
 
 export function PlansSection() {
   const { t } = useTranslation()
+  const { auth } = useAuthStore()
+  const isAuthenticated = !!auth.user
 
   const plans: Plan[] = [
     {
@@ -135,7 +138,9 @@ export function PlansSection() {
             <Button
               className='mt-6 w-full'
               variant={plan.highlighted ? 'default' : 'outline'}
-              render={<Link to='/sign-up' />}
+              render={
+                <Link to={isAuthenticated ? '/wallet' : '/sign-up'} />
+              }
             >
               {plan.cta}
             </Button>
