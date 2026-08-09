@@ -46,6 +46,10 @@ export const subscriptionPlanSchema = z.object({
   waffo_pancake_product_id: z.string().optional(),
   // JSON string array of model names/patterns this plan may call (empty = all)
   model_access: z.string().optional(),
+  // Fair-use throttles (0 = unlimited)
+  rpm_limit: z.number().optional().default(0),
+  daily_token_limit: z.number().optional().default(0),
+  concurrent_limit: z.number().optional().default(0),
 })
 
 export type SubscriptionPlan = z.infer<typeof subscriptionPlanSchema>

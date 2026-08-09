@@ -193,6 +193,13 @@ type SubscriptionPlan struct {
 	// one of their active subscription plans.
 	ModelAccess string `json:"model_access" gorm:"type:text"`
 
+	// Fair-use throttles (0 = unlimited). Enforced per user in the relay
+	// distributor middleware. The effective limit for a user is the maximum
+	// across their active plans (most generous plan wins).
+	RpmLimit         int   `json:"rpm_limit" gorm:"type:int;default:0"`                 // max requests per minute
+	DailyTokenLimit  int64 `json:"daily_token_limit" gorm:"type:bigint;default:0"`      // max tokens per UTC day
+	ConcurrentLimit  int   `json:"concurrent_limit" gorm:"type:int;default:0"`          // max concurrent in-flight requests
+
 	CreatedAt int64 `json:"created_at" gorm:"bigint"`
 	UpdatedAt int64 `json:"updated_at" gorm:"bigint"`
 }
@@ -963,6 +970,50 @@ func ModelAllowedByAccessList(model string, access []string) bool {
 		}
 	}
 	return false
+}
+
+// RateLimits is the effective fair-use throttle applied to a user.
+type RateLimits struct {
+	RpmLimit        int
+	DailyTokenLimit int64
+	ConcurrentLimit int
+}
+
+// HasAny reports whether at least one throttle is configured (non-zero).
+func (r RateLimits) HasAny() bool {
+	return r.RpmLimit > 0 || r.DailyTokenLimit > 0 || r.ConcurrentLimit > 0
+}
+
+// GetRateLimitsForUser returns the effective fair-use limits across the
+// user's active subscription plans. The most generous limit wins per metric
+// (a user holding multiple plans gets the best of each). No active plan or
+// all-zero limits means no throttling (backward compatible).
+func GetRateLimitsForUser(userId int) (RateLimits, error) {
+	planIds, err := GetActiveSubscriptionPlanIds(userId)
+	if err != nil {
+		return RateLimits{}, err
+	}
+	if len(planIds) == 0 {
+		return RateLimits{}, nil
+	}
+	var limits RateLimits
+	for _, planId := range planIds {
+		plan, err := GetSubscriptionPlanById(planId)
+		if err != nil {
+			common.SysError("GetRateLimitsForUser: plan " + strconv.Itoa(planId) + " not found: " + err.Error())
+			continue
+		}
+		if plan.RpmLimit > limits.RpmLimit {
+			limits.RpmLimit = plan.RpmLimit
+		}
+		if plan.DailyTokenLimit > limits.DailyTokenLimit {
+			limits.DailyTokenLimit = plan.DailyTokenLimit
+		}
+		if plan.ConcurrentLimit > limits.ConcurrentLimit {
+			limits.ConcurrentLimit = plan.ConcurrentLimit
+		}
+	}
+	return limits, nil
 }
 
 // UserActiveSubscriptionsAllowWalletOverflow returns whether wallet balance may be used

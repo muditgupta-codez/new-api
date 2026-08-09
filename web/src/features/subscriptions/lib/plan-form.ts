@@ -52,6 +52,10 @@ export function getPlanFormSchema(t: TFunction) {
     waffo_pancake_product_id: z.string().optional(),
     // Model access list (array of model names; empty = all models)
     model_access: z.array(z.string()).optional(),
+    // Fair-use throttles (0 = unlimited)
+    rpm_limit: z.coerce.number().min(0),
+    daily_token_limit: z.coerce.number().min(0),
+    concurrent_limit: z.coerce.number().min(0),
   })
 }
 
@@ -78,6 +82,9 @@ export const PLAN_FORM_DEFAULTS: PlanFormValues = {
   creem_product_id: '',
   waffo_pancake_product_id: '',
   model_access: [],
+  rpm_limit: 0,
+  daily_token_limit: 0,
+  concurrent_limit: 0,
 }
 
 export function planToFormValues(plan: SubscriptionPlan): PlanFormValues {
@@ -102,6 +109,9 @@ export function planToFormValues(plan: SubscriptionPlan): PlanFormValues {
     creem_product_id: plan.creem_product_id || '',
     waffo_pancake_product_id: plan.waffo_pancake_product_id || '',
     model_access: parseModelAccess(plan.model_access),
+    rpm_limit: Number(plan.rpm_limit || 0),
+    daily_token_limit: Number(plan.daily_token_limit || 0),
+    concurrent_limit: Number(plan.concurrent_limit || 0),
   }
 }
 
@@ -137,6 +147,9 @@ export function formValuesToPlanPayload(values: PlanFormValues): PlanPayload {
       downgrade_group: values.downgrade_group || '',
       // Empty array → '' → backend treats as unrestricted (all models).
       model_access: JSON.stringify(values.model_access || []),
+      rpm_limit: Number(values.rpm_limit || 0),
+      daily_token_limit: Number(values.daily_token_limit || 0),
+      concurrent_limit: Number(values.concurrent_limit || 0),
     },
   }
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/common/fairuse"
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/types"
 
@@ -387,6 +388,11 @@ func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams)
 	if err != nil {
 		logger.LogError(c, "failed to record log: "+err.Error())
 	}
+	// Fair-use daily token accounting (idempotent per request). Uses the
+	// shared fairuse limiter directly to avoid an import cycle with
+	// middleware; the middleware marks the request context when the user has
+	// a daily budget.
+	fairuse.Default.RecordDailyForRequest(c, userId, params.PromptTokens, params.CompletionTokens)
 	if common.DataExportEnabled {
 		LogQuotaData(QuotaDataLogParams{
 			UserID:    userId,

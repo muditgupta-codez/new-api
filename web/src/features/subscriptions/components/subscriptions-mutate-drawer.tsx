@@ -493,6 +493,93 @@ export function SubscriptionsMutateDrawer({
                 }}
               />
 
+              {/* Fair Use Limits — anti-abuse throttles (0 = unlimited) */}
+              <div className='rounded-md border p-3'>
+                <div className='mb-2 text-sm font-medium'>
+                  {t('Fair Use Limits')}
+                  <span className='ml-2 text-xs font-normal text-muted-foreground'>
+                    {t('0 = unlimited')}
+                  </span>
+                </div>
+                <div className='grid grid-cols-1 gap-3 sm:grid-cols-3'>
+                  <FormField
+                    control={form.control}
+                    name='rpm_limit'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('Requests / minute')}</FormLabel>
+                        <FormControl>
+                          <Input
+                            type='number'
+                            min={0}
+                            value={field.value}
+                            onChange={(e) =>
+                              field.onChange(
+                                Number.parseInt(e.target.value) || 0
+                              )
+                            }
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          {t('Max API requests per minute per user.')}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='daily_token_limit'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('Daily tokens')}</FormLabel>
+                        <FormControl>
+                          <Input
+                            type='number'
+                            min={0}
+                            value={field.value}
+                            onChange={(e) =>
+                              field.onChange(
+                                Number.parseInt(e.target.value) || 0
+                              )
+                            }
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          {t('Max tokens per UTC day per user.')}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='concurrent_limit'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('Concurrent requests')}</FormLabel>
+                        <FormControl>
+                          <Input
+                            type='number'
+                            min={0}
+                            value={field.value}
+                            onChange={(e) =>
+                              field.onChange(
+                                Number.parseInt(e.target.value) || 0
+                              )
+                            }
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          {t('Max in-flight requests at once per user.')}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
               <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
                 <FormField
                   control={form.control}
