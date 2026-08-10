@@ -1151,6 +1151,16 @@ func IsAdmin(userId int) bool {
 	return user.Role >= common.RoleAdminUser
 }
 
+// GetAllAdmins returns all users with admin role or above (used for support ticket notifications).
+func GetAllAdmins() ([]User, error) {
+	var users []User
+	err := DB.Where("role >= ? AND status = 1", common.RoleAdminUser).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func ValidateAccessToken(token string) (*User, error) {
 	if token == "" {
 		return nil, nil

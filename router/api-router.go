@@ -252,6 +252,26 @@ func SetApiRouter(router *gin.Engine) {
 			tokenRoute.POST("/batch/keys", middleware.CriticalRateLimit(), middleware.DisableCache(), controller.GetTokenKeysBatch)
 		}
 
+		supportRoute := apiRouter.Group("/support")
+		supportRoute.Use(middleware.UserAuth())
+		{
+			supportRoute.POST("/tickets", controller.CreateSupportTicket)
+			supportRoute.GET("/tickets", controller.GetMySupportTickets)
+			supportRoute.GET("/tickets/:id", controller.GetMySupportTicket)
+			supportRoute.POST("/tickets/:id/reply", controller.ReplySupportTicket)
+			supportRoute.POST("/tickets/:id/close", controller.CloseSupportTicket)
+		}
+
+		supportAdminRoute := apiRouter.Group("/support/admin")
+		supportAdminRoute.Use(middleware.AdminAuth())
+		{
+			supportAdminRoute.GET("/tickets", controller.AdminListSupportTickets)
+			supportAdminRoute.GET("/tickets/:id", controller.AdminGetSupportTicket)
+			supportAdminRoute.POST("/tickets/:id/reply", controller.AdminReplySupportTicket)
+			supportAdminRoute.PUT("/tickets/:id/status", controller.AdminUpdateSupportTicketStatus)
+			supportAdminRoute.DELETE("/tickets/:id", controller.AdminDeleteSupportTicket)
+		}
+
 		usageRoute := apiRouter.Group("/usage")
 		usageRoute.Use(middleware.CORS(), middleware.CriticalRateLimit())
 		{

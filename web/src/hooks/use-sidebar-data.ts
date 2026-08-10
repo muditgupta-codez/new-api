@@ -24,6 +24,7 @@ import {
   FlaskConical,
   Key,
   LayoutDashboard,
+  LifeBuoy,
   ListTodo,
   MessageSquare,
   Radio,
@@ -91,6 +92,11 @@ export function useSidebarData(): SidebarData {
             icon: FileText,
           },
           {
+            title: t('Support'),
+            url: '/support',
+            icon: LifeBuoy,
+          },
+          {
             title: t('Task Logs'),
             url: '/usage-logs/task',
             activeUrls: ['/usage-logs/drawing'],
@@ -138,6 +144,11 @@ export function useSidebarData(): SidebarData {
             title: t('Redemption Codes'),
             url: '/redemption-codes',
             icon: Ticket,
+          },
+          {
+            title: t('Support'),
+            url: '/support/admin',
+            icon: LifeBuoy,
           },
           {
             title: t('Subscriptions'),
