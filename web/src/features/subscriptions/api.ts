@@ -134,6 +134,23 @@ export async function resetPlanSubscriptions(
 // User-facing Subscription Payment
 // ============================================================================
 
+export interface ApplyCouponResponse {
+  success: boolean
+  message?: string
+  data?: {
+    valid?: boolean
+    discount_percent?: number
+    code?: string
+  }
+}
+
+export async function applySubscriptionCoupon(
+  code: string
+): Promise<ApplyCouponResponse> {
+  const res = await api.post('/api/subscription/coupon/apply', { code })
+  return res.data
+}
+
 export async function paySubscriptionStripe(
   data: SubscriptionPayRequest
 ): Promise<SubscriptionPayResponse> {

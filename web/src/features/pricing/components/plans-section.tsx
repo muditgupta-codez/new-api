@@ -17,19 +17,32 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link } from '@tanstack/react-router'
-import { Check, Loader2, Sparkles } from 'lucide-react'
+import { BadgePercent, Check, Loader2, Sparkles, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { getPublicPlans, paySubscriptionStripe } from '@/features/subscriptions/api'
+import { Input } from '@/components/ui/input'
+import {
+  applySubscriptionCoupon,
+  getPublicPlans,
+  paySubscriptionStripe,
+} from '@/features/subscriptions/api'
 import type { PlanRecord } from '@/features/subscriptions/types'
 import { useAuthStore } from '@/stores/auth-store'
+
+const COUPON_STORAGE_KEY = 'zeskai_sub_coupon'
+
+interface AppliedCoupon {
+  code: string
+  percent: number
+}
 
 interface Plan {
   nameKey: string
   price: string
+  priceNum: number
   period: string
   tagline: string
   limits: string
@@ -45,6 +58,93 @@ export function PlansSection() {
 
   const [publicPlans, setPublicPlans] = useState<PlanRecord[]>([])
   const [payingPlan, setPayingPlan] = useState<string | null>(null)
+
+  // ---- Coupon state ----
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null)
+  const [couponInput, setCouponInput] = useState('')
+  const [couponBusy, setCouponBusy] = useState(false)
+  const [couponError, setCouponError] = useState('')
+
+  const persistCoupon = (applied: AppliedCoupon | null) => {
+    setCoupon(applied)
+    if (applied) {
+      try {
+        localStorage.setItem(COUPON_STORAGE_KEY, JSON.stringify(applied))
+      } catch {
+        // storage unavailable — coupon still applies for this session
+      }
+    } else {
+      try {
+        localStorage.removeItem(COUPON_STORAGE_KEY)
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim()
+    if (!code || couponBusy) return
+    setCouponBusy(true)
+    setCouponError('')
+    try {
+      const res = await applySubscriptionCoupon(code)
+      if (res.message === 'success' && res.data?.valid) {
+        persistCoupon({
+          code: res.data.code || code.toUpperCase(),
+          percent: res.data.discount_percent || 50,
+        })
+        setCouponInput('')
+      } else {
+        setCouponError(
+          res.message && res.message !== 'success'
+            ? res.message
+            : t('Invalid coupon code')
+        )
+      }
+    } catch {
+      setCouponError(t('Could not validate coupon. Try again.'))
+    } finally {
+      setCouponBusy(false)
+    }
+  }
+
+  // Re-validate a previously applied coupon (survives navigation via localStorage)
+  useEffect(() => {
+    if (!isAuthenticated) return
+    let cancelled = false
+    try {
+      const raw = localStorage.getItem(COUPON_STORAGE_KEY)
+      if (!raw) return
+      const stored = JSON.parse(raw) as AppliedCoupon
+      applySubscriptionCoupon(stored.code)
+        .then((res) => {
+          if (cancelled) return
+          if (res.message === 'success' && res.data?.valid) {
+            persistCoupon({
+              code: res.data.code || stored.code,
+              percent: res.data.discount_percent || stored.percent,
+            })
+          } else {
+            persistCoupon(null)
+          }
+        })
+        .catch(() => {
+          if (!cancelled) persistCoupon(null)
+        })
+    } catch {
+      persistCoupon(null)
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [isAuthenticated])
+
+  const discountedPrice = (priceNum: number) => {
+    if (!coupon || coupon.percent <= 0) return null
+    const discounted = priceNum * (1 - coupon.percent / 100)
+    return discounted % 1 === 0 ? discounted.toFixed(0) : discounted.toFixed(2)
+  }
 
   // The public plans endpoint requires auth; we only need plan ids to
   // launch the Stripe checkout for signed-in users.
@@ -83,7 +183,10 @@ export function PlansSection() {
     }
     setPayingPlan(plan.nameKey)
     try {
-      const res = await paySubscriptionStripe({ plan_id: backendPlan.id })
+      const res = await paySubscriptionStripe({
+        plan_id: backendPlan.id,
+        coupon_code: coupon?.code,
+      })
       if (res.message === 'success' && res.data?.pay_link) {
         window.location.href = res.data.pay_link
       } else {
@@ -106,6 +209,7 @@ export function PlansSection() {
     {
       nameKey: 'Starter',
       price: '$18',
+      priceNum: 18,
       period: t('/month'),
       tagline: t('For solo devs who want one reliable key'),
       limits: t('14 models · 5M tokens/day · 30 req/min'),
@@ -122,6 +226,7 @@ export function PlansSection() {
     {
       nameKey: 'Pro',
       price: '$39',
+      priceNum: 39,
       period: t('/month'),
       tagline: t('Frontier models for serious AI-assisted dev'),
       limits: t('22 models · 20M tokens/day · 120 req/min'),
@@ -139,6 +244,7 @@ export function PlansSection() {
     {
       nameKey: 'Max',
       price: '$99',
+      priceNum: 99,
       period: t('/month'),
       tagline: t('For teams shipping with AI every day'),
       limits: t('All 25 models · 100M tokens/day · 300 req/min'),
@@ -168,6 +274,74 @@ export function PlansSection() {
         </p>
       </div>
 
+      <div className='mb-8 flex flex-col items-center'>
+        <div className='w-full max-w-md'>
+          {coupon ? (
+            <div className='border-emerald-500/30 bg-emerald-500/5 flex items-center gap-2 rounded-xl border px-4 py-3'>
+              <BadgePercent className='text-emerald-500 size-4 shrink-0' />
+              <div className='min-w-0 flex-1 text-left'>
+                <p className='text-emerald-600 dark:text-emerald-400 text-xs font-semibold'>
+                  {t('{{code}} applied — {{percent}}% off all plans', {
+                    code: coupon.code,
+                    percent: coupon.percent,
+                  })}
+                </p>
+                <p className='text-muted-foreground text-[10px]'>
+                  {t('Discount is applied automatically at checkout')}
+                </p>
+              </div>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='text-muted-foreground hover:text-foreground h-7 w-7 p-0'
+                onClick={() => persistCoupon(null)}
+                aria-label={t('Remove coupon')}
+              >
+                <X className='size-3.5' />
+              </Button>
+            </div>
+          ) : (
+            <div className='border-border/40 bg-muted/10 rounded-xl border px-4 py-3'>
+              <div className='flex items-center gap-2'>
+                <BadgePercent className='text-muted-foreground size-4 shrink-0' />
+                <span className='text-muted-foreground flex-1 text-left text-xs'>
+                  {t('Have a promo code? Apply it for a discount.')}
+                </span>
+              </div>
+              <div className='mt-2 flex gap-2'>
+                <Input
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleApplyCoupon()
+                  }}
+                  placeholder={t('Enter promo code')}
+                  className='h-9 text-sm'
+                  disabled={couponBusy}
+                />
+                <Button
+                  className='h-9 shrink-0'
+                  variant='outline'
+                  onClick={handleApplyCoupon}
+                  disabled={couponBusy || !couponInput.trim()}
+                >
+                  {couponBusy ? (
+                    <Loader2 className='size-3.5 animate-spin' />
+                  ) : (
+                    t('Apply')
+                  )}
+                </Button>
+              </div>
+              {couponError && (
+                <p className='text-red-500 mt-1.5 text-left text-[11px]'>
+                  {couponError}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className='grid gap-5 md:grid-cols-3'>
         {plans.map((plan) => (
           <div
@@ -186,9 +360,23 @@ export function PlansSection() {
             )}
             <h3 className='text-sm font-semibold'>{t(plan.nameKey)}</h3>
             <div className='mt-2 flex items-baseline gap-1'>
-              <span className='text-3xl font-bold tracking-tight'>
-                {plan.price}
-              </span>
+              {coupon ? (
+                <>
+                  <span className='text-3xl font-bold tracking-tight'>
+                    ${discountedPrice(plan.priceNum)}
+                  </span>
+                  <span className='text-muted-foreground text-sm line-through'>
+                    {plan.price}
+                  </span>
+                  <span className='bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full px-1.5 py-0.5 text-[10px] font-bold'>
+                    -{coupon.percent}%
+                  </span>
+                </>
+              ) : (
+                <span className='text-3xl font-bold tracking-tight'>
+                  {plan.price}
+                </span>
+              )}
               <span className='text-muted-foreground text-sm'>
                 {plan.period}
               </span>

@@ -149,6 +149,13 @@ const BILLING_SECTIONS = [
           StripeUnitPrice: settings.StripeUnitPrice,
           StripeMinTopUp: settings.StripeMinTopUp,
           StripePromotionCodesEnabled: settings.StripePromotionCodesEnabled,
+          StripeSubscriptionCouponId:
+            settings.StripeSubscriptionCouponId ?? '',
+          SubscriptionCouponCode: settings.SubscriptionCouponCode ?? '',
+          SubscriptionCouponPercent:
+            settings.SubscriptionCouponPercent ?? 50,
+          SubscriptionCouponEnabled:
+            settings.SubscriptionCouponEnabled ?? false,
           CreemApiKey: settings.CreemApiKey,
           CreemWebhookSecret: settings.CreemWebhookSecret,
           CreemTestMode: settings.CreemTestMode,

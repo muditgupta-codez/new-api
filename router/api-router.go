@@ -165,6 +165,10 @@ func SetApiRouter(router *gin.Engine) {
 			subscriptionRoute.POST("/creem/pay", middleware.CriticalRateLimit(), controller.SubscriptionRequestCreemPay)
 			subscriptionRoute.POST("/waffo-pancake/pay", middleware.CriticalRateLimit(), controller.SubscriptionRequestWaffoPancakePay)
 		}
+		// Coupon validation is intentionally public so visitors can preview
+		// the discount on the pricing page before signing up. The discount
+		// itself is re-validated server-side at checkout.
+		apiRouter.POST("/subscription/coupon/apply", middleware.CriticalRateLimit(), controller.ApplySubscriptionCoupon)
 		subscriptionAdminRoute := apiRouter.Group("/subscription/admin")
 		subscriptionAdminRoute.Use(middleware.AdminAuth())
 		{

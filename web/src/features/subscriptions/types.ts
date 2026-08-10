@@ -98,6 +98,7 @@ export interface PlanPayload {
 export interface SubscriptionPayRequest {
   plan_id: number
   payment_method?: string
+  coupon_code?: string
 }
 
 export interface SubscriptionPayResponse {

@@ -147,6 +147,10 @@ const paymentSchema = z.object({
   StripeUnitPrice: z.coerce.number().min(0),
   StripeMinTopUp: z.coerce.number().min(0),
   StripePromotionCodesEnabled: z.boolean(),
+  StripeSubscriptionCouponId: z.string(),
+  SubscriptionCouponCode: z.string(),
+  SubscriptionCouponPercent: z.coerce.number().min(0).max(100),
+  SubscriptionCouponEnabled: z.boolean(),
   CreemApiKey: z.string(),
   CreemWebhookSecret: z.string(),
   CreemTestMode: z.boolean(),
@@ -433,6 +437,10 @@ export function PaymentSettingsSection({
       StripeUnitPrice: values.StripeUnitPrice,
       StripeMinTopUp: values.StripeMinTopUp,
       StripePromotionCodesEnabled: values.StripePromotionCodesEnabled,
+      StripeSubscriptionCouponId: values.StripeSubscriptionCouponId.trim(),
+      SubscriptionCouponCode: values.SubscriptionCouponCode.trim(),
+      SubscriptionCouponPercent: values.SubscriptionCouponPercent,
+      SubscriptionCouponEnabled: values.SubscriptionCouponEnabled,
       CreemApiKey: values.CreemApiKey.trim(),
       CreemWebhookSecret: values.CreemWebhookSecret.trim(),
       CreemTestMode: values.CreemTestMode,
@@ -478,6 +486,12 @@ export function PaymentSettingsSection({
       StripeMinTopUp: initialRef.current.StripeMinTopUp,
       StripePromotionCodesEnabled:
         initialRef.current.StripePromotionCodesEnabled,
+      StripeSubscriptionCouponId:
+        initialRef.current.StripeSubscriptionCouponId.trim(),
+      SubscriptionCouponCode:
+        initialRef.current.SubscriptionCouponCode.trim(),
+      SubscriptionCouponPercent: initialRef.current.SubscriptionCouponPercent,
+      SubscriptionCouponEnabled: initialRef.current.SubscriptionCouponEnabled,
       CreemApiKey: initialRef.current.CreemApiKey.trim(),
       CreemWebhookSecret: initialRef.current.CreemWebhookSecret.trim(),
       CreemTestMode: initialRef.current.CreemTestMode,
@@ -598,6 +612,45 @@ export function PaymentSettingsSection({
       updates.push({
         key: 'StripePromotionCodesEnabled',
         value: sanitized.StripePromotionCodesEnabled,
+      })
+    }
+
+    if (
+      sanitized.StripeSubscriptionCouponId !==
+      initial.StripeSubscriptionCouponId
+    ) {
+      updates.push({
+        key: 'StripeSubscriptionCouponId',
+        value: sanitized.StripeSubscriptionCouponId,
+      })
+    }
+
+    if (
+      sanitized.SubscriptionCouponCode !== initial.SubscriptionCouponCode
+    ) {
+      updates.push({
+        key: 'SubscriptionCouponCode',
+        value: sanitized.SubscriptionCouponCode,
+      })
+    }
+
+    if (
+      sanitized.SubscriptionCouponPercent !==
+      initial.SubscriptionCouponPercent
+    ) {
+      updates.push({
+        key: 'SubscriptionCouponPercent',
+        value: sanitized.SubscriptionCouponPercent,
+      })
+    }
+
+    if (
+      sanitized.SubscriptionCouponEnabled !==
+      initial.SubscriptionCouponEnabled
+    ) {
+      updates.push({
+        key: 'SubscriptionCouponEnabled',
+        value: sanitized.SubscriptionCouponEnabled,
       })
     }
 
@@ -1441,6 +1494,98 @@ export function PaymentSettingsSection({
                       </SettingsSwitchItem>
                     )}
                   />
+
+                  <div className='border-border/40 rounded-lg border p-4'>
+                    <h4 className='mb-1 text-sm font-semibold'>
+                      {t('Subscription discount coupon')}
+                    </h4>
+                    <p className='text-muted-foreground mb-3 text-xs'>
+                      {t(
+                        'Users who apply this code get a discount on every subscription plan at checkout.'
+                      )}
+                    </p>
+                    <div className='grid gap-3 sm:grid-cols-2'>
+                      <FormField
+                        control={form.control}
+                        name='SubscriptionCouponEnabled'
+                        render={({ field }) => (
+                          <SettingsSwitchItem>
+                            <SettingsSwitchContent>
+                              <FormLabel>
+                                {t('Enable subscription coupon')}
+                              </FormLabel>
+                            </SettingsSwitchContent>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </SettingsSwitchItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='SubscriptionCouponCode'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('Coupon code')}</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder='LAUNCH50'
+                                className='font-mono uppercase'
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='SubscriptionCouponPercent'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('Discount percent')}</FormLabel>
+                            <FormControl>
+                              <Input
+                                type='number'
+                                min={1}
+                                max={100}
+                                {...safeNumberFieldProps(field)}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              {t('e.g., 50 means 50% off all plans')}
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name='StripeSubscriptionCouponId'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('Stripe coupon ID')}</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder='coupon_xxx'
+                                className='font-mono'
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              {t(
+                                'Percent-off coupon created in Stripe (attached at checkout)'
+                              )}
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </TabsContent>

@@ -17,7 +17,8 @@ import (
 )
 
 type SubscriptionStripePayRequest struct {
-	PlanId int `json:"plan_id"`
+	PlanId     int    `json:"plan_id"`
+	CouponCode string `json:"coupon_code,omitempty"`
 }
 
 func SubscriptionRequestStripePay(c *gin.Context) {
@@ -79,17 +80,40 @@ func SubscriptionRequestStripePay(c *gin.Context) {
 	reference := fmt.Sprintf("sub-stripe-ref-%d-%d-%s", user.Id, time.Now().UnixMilli(), randstr.String(4))
 	referenceId := "sub_ref_" + common.Sha1([]byte(reference))
 
-	payLink, err := genStripeSubscriptionLink(referenceId, user.StripeCustomer, user.Email, plan.StripePriceId)
+	// Optional discount coupon — validated server-side. When valid, the
+	// Stripe coupon is attached to the checkout session (guaranteed
+	// discount) and the recorded order amount reflects the discount.
+	discountPercent := 0.0
+	discountCouponId := ""
+	if req.CouponCode != "" {
+		percent, ok, reason := ValidateSubscriptionCoupon(req.CouponCode)
+		if !ok {
+			common.ApiErrorMsg(c, reason)
+			return
+		}
+		if setting.StripeSubscriptionCouponId == "" {
+			common.ApiErrorMsg(c, "Coupon is not configured")
+			return
+		}
+		discountPercent = percent
+		discountCouponId = setting.StripeSubscriptionCouponId
+	}
+
+	payLink, err := genStripeSubscriptionLink(referenceId, user.StripeCustomer, user.Email, plan.StripePriceId, discountCouponId)
 	if err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("Stripe 订阅支付链接创建失败 trade_no=%s plan_id=%d error=%q", referenceId, plan.Id, err.Error()))
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "拉起支付失败"})
 		return
 	}
 
+	orderMoney := plan.PriceAmount
+	if discountPercent > 0 {
+		orderMoney = plan.PriceAmount * (1 - discountPercent/100)
+	}
 	order := &model.SubscriptionOrder{
 		UserId:          userId,
 		PlanId:          plan.Id,
-		Money:           plan.PriceAmount,
+		Money:           orderMoney,
 		TradeNo:         referenceId,
 		PaymentMethod:   model.PaymentMethodStripe,
 		PaymentProvider: model.PaymentProviderStripe,
@@ -104,12 +128,13 @@ func SubscriptionRequestStripePay(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
 		"data": gin.H{
-			"pay_link": payLink,
+			"pay_link":         payLink,
+			"discount_percent": discountPercent,
 		},
 	})
 }
 
-func genStripeSubscriptionLink(referenceId string, customerId string, email string, priceId string) (string, error) {
+func genStripeSubscriptionLink(referenceId string, customerId string, email string, priceId string, couponId string) (string, error) {
 	stripe.Key = setting.StripeApiSecret
 
 	params := &stripe.CheckoutSessionParams{
@@ -123,6 +148,14 @@ func genStripeSubscriptionLink(referenceId string, customerId string, email stri
 			},
 		},
 		Mode: stripe.String(string(stripe.CheckoutSessionModeSubscription)),
+	}
+
+	if couponId != "" {
+		params.Discounts = []*stripe.CheckoutSessionDiscountParams{
+			{
+				Coupon: stripe.String(couponId),
+			},
+		}
 	}
 
 	if "" == customerId {

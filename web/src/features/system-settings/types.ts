@@ -301,6 +301,10 @@ export type BillingSettings = {
   StripeUnitPrice: number
   StripeMinTopUp: number
   StripePromotionCodesEnabled: boolean
+  StripeSubscriptionCouponId: string
+  SubscriptionCouponCode: string
+  SubscriptionCouponPercent: number
+  SubscriptionCouponEnabled: boolean
   CreemApiKey: string
   CreemWebhookSecret: string
   CreemTestMode: boolean

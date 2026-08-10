@@ -117,7 +117,21 @@ export function SubscriptionPurchaseDialog(props: Props) {
   const handlePayStripe = async () => {
     setPaying(true)
     try {
-      const res = await paySubscriptionStripe({ plan_id: plan.id })
+      // Carry over any coupon applied on the pricing page (localStorage).
+      let couponCode: string | undefined
+      try {
+        const raw = localStorage.getItem('zeskai_sub_coupon')
+        if (raw) {
+          const parsed = JSON.parse(raw) as { code?: string }
+          if (parsed?.code) couponCode = parsed.code
+        }
+      } catch {
+        // ignore storage errors
+      }
+      const res = await paySubscriptionStripe({
+        plan_id: plan.id,
+        coupon_code: couponCode,
+      })
       if (res.message === 'success' && res.data?.pay_link) {
         // In-tab redirect (not window.open) — the user-gesture context is
         // lost across the await, so a popup would be blocked. Stripe

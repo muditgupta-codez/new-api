@@ -5342,6 +5342,22 @@
     "models, one API": "models, one API",
     "opencode": "opencode",
     "plans, from $18/month": "plans, from $18/month",
-    "tokens/day on Max": "tokens/day on Max"
+    "tokens/day on Max": "tokens/day on Max",
+    "Apply": "Apply",
+    "Could not validate coupon. Try again.": "Could not validate coupon. Try again.",
+    "Coupon code": "Coupon code",
+    "Discount is applied automatically at checkout": "Discount is applied automatically at checkout",
+    "Discount percent": "Discount percent",
+    "Enable subscription coupon": "Enable subscription coupon",
+    "Enter promo code": "Enter promo code",
+    "Have a promo code? Apply it for a discount.": "Have a promo code? Apply it for a discount.",
+    "Invalid coupon code": "Invalid coupon code",
+    "Percent-off coupon created in Stripe (attached at checkout)": "Percent-off coupon created in Stripe (attached at checkout)",
+    "Remove coupon": "Remove coupon",
+    "Stripe coupon ID": "Stripe coupon ID",
+    "Subscription discount coupon": "Subscription discount coupon",
+    "Users who apply this code get a discount on every subscription plan at checkout.": "Users who apply this code get a discount on every subscription plan at checkout.",
+    "e.g., 50 means 50% off all plans": "e.g., 50 means 50% off all plans",
+    "{{code}} applied — {{percent}}% off all plans": "{{code}} applied — {{percent}}% off all plans"
   }
 }

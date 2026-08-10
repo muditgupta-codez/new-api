@@ -117,6 +117,7 @@ function redemption(id: number, quota = 500001): Redemption {
   return {
     id,
     user_id: 1,
+    plan_id: 0,
     name: `code-${id}`,
     key: `key-${id}`,
     status: 1,

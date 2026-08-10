@@ -443,6 +443,14 @@ func updateOptionMap(key string, value string) (err error) {
 		setting.StripeMinTopUp, _ = strconv.Atoi(value)
 	case "StripePromotionCodesEnabled":
 		setting.StripePromotionCodesEnabled = value == "true"
+	case "StripeSubscriptionCouponId":
+		setting.StripeSubscriptionCouponId = value
+	case "SubscriptionCouponCode":
+		setting.SubscriptionCouponCode = value
+	case "SubscriptionCouponPercent":
+		setting.SubscriptionCouponPercent, _ = strconv.ParseFloat(value, 64)
+	case "SubscriptionCouponEnabled":
+		setting.SubscriptionCouponEnabled = value == "true"
 	case "CreemApiKey":
 		setting.CreemApiKey = value
 	case "CreemProducts":
