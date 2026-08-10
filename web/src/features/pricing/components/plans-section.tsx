@@ -32,6 +32,7 @@ interface Plan {
   price: string
   period: string
   tagline: string
+  limits: string
   cta: string
   highlighted?: boolean
   features: string[]
@@ -107,12 +108,15 @@ export function PlansSection() {
       price: '$18',
       period: t('/month'),
       tagline: t('For solo devs who want one reliable key'),
+      limits: t('14 models · 5M tokens/day · 30 req/min'),
       cta: t('Get Starter'),
       features: [
-        t('Access to open-weight models: DeepSeek, Qwen, GLM, Kimi'),
-        t('Generous daily quota — thousands of requests'),
+        t(
+          'Open-weight models: DeepSeek V4 Flash, Qwen 3.5/3.6/3.7 Plus, GLM-5, MiniMax M2.5–M3, Mimo V2, Hunyuan Hy3'
+        ),
+        t('5M tokens every day — thousands of requests'),
         t('Works with opencode, Cline, Continue, Cursor'),
-        t('Usage dashboard'),
+        t('Usage dashboard with real-time limits'),
       ],
     },
     {
@@ -120,12 +124,15 @@ export function PlansSection() {
       price: '$39',
       period: t('/month'),
       tagline: t('Frontier models for serious AI-assisted dev'),
+      limits: t('22 models · 20M tokens/day · 120 req/min'),
       cta: t('Go Pro'),
       highlighted: true,
       features: [
         t('Everything in Starter'),
-        t('Frontier models: Claude, GPT, Gemini'),
-        t('Higher quotas and faster rate limits'),
+        t(
+          'Plus DeepSeek V4 Pro, Kimi K2.5–K2.7, GLM 5.1/5.2, Qwen 3.7/3.8 Max'
+        ),
+        t('4x the daily quota with higher rate limits'),
         t('Priority routing & support'),
       ],
     },
@@ -134,12 +141,13 @@ export function PlansSection() {
       price: '$99',
       period: t('/month'),
       tagline: t('For teams shipping with AI every day'),
+      limits: t('All 25 models · 100M tokens/day · 300 req/min'),
       cta: t('Go Max'),
       features: [
         t('Everything in Pro'),
-        t('5 member seats with individual keys'),
-        t('Per-member quotas and usage reports'),
-        t('Admin controls & spend visibility'),
+        t('Plus GPT-5.6-Luna, Grok 4.5, Kimi K3'),
+        t('20x the Starter quota for heavy automation'),
+        t('32 concurrent requests and highest rate limits'),
       ],
     },
   ]
@@ -188,6 +196,9 @@ export function PlansSection() {
             <p className='text-muted-foreground mt-1.5 text-xs leading-relaxed'>
               {plan.tagline}
             </p>
+            <p className='bg-primary/5 text-primary mt-3 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide'>
+              {plan.limits}
+            </p>
             <ul className='mt-5 flex-1 space-y-2.5'>
               {plan.features.map((feature) => (
                 <li key={feature} className='flex items-start gap-2'>
@@ -219,7 +230,7 @@ export function PlansSection() {
 
       <p className='text-muted-foreground/60 mt-6 text-center text-xs'>
         {t(
-          'Plans subject to fair-use quotas. All models available to every plan at their tier quota.'
+          'Each plan unlocks the models on its card, with the daily token allowance shown. Upgrade or downgrade any time from your wallet.'
         )}
       </p>
     </section>

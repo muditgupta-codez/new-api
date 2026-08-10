@@ -21,7 +21,14 @@ import { useTranslation } from 'react-i18next'
 import { PublicLayout } from '@/components/layout'
 import { PageTransition } from '@/components/page-transition'
 
-import { PlansSection } from './components'
+import {
+  PlansSection,
+  FeatureGrid,
+  HowItWorks,
+  ComparisonTable,
+  FaqSection,
+  CtaBanner,
+} from './components'
 
 export function Pricing() {
   const { t } = useTranslation()
@@ -52,9 +59,19 @@ export function Pricing() {
             <p className='text-muted-foreground/80 mt-3 text-sm sm:mt-4 sm:text-base'>
               {t('Flat monthly pricing. No per-token meter.')}
             </p>
+            <p className='text-muted-foreground/60 mx-auto mt-2 max-w-2xl text-xs leading-relaxed sm:text-sm'>
+              {t(
+                'One API key for 25 frontier and open-weight models — DeepSeek, Qwen, GLM, Kimi, GPT and more. Works with opencode, Cline, Continue, Cursor and every OpenAI-compatible tool.'
+              )}
+            </p>
           </header>
 
           <PlansSection />
+          <FeatureGrid />
+          <HowItWorks />
+          <ComparisonTable />
+          <FaqSection />
+          <CtaBanner />
         </PageTransition>
       </div>
     </PublicLayout>

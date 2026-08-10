@@ -43,13 +43,13 @@ export function Features(_props: FeaturesProps) {
       num: '01',
       title: t('One key. Every model.'),
       desc: t(
-        'A single OpenAI-compatible API key unlocks Claude, GPT, Gemini, DeepSeek, Qwen, GLM, Kimi and more. Swap models without touching your code.'
+        'A single OpenAI-compatible API key unlocks DeepSeek, Qwen, GLM, Kimi, MiniMax, Mimo, Hunyuan, GPT and Grok. Swap models without touching your code.'
       ),
       span: 'md:col-span-2',
       icon: <Zap className='size-4 text-blue-400' />,
       visual: (
         <div className='mt-4 grid grid-cols-3 gap-2'>
-          {['Claude', 'GPT', 'Gemini', 'DeepSeek', 'Qwen', 'GLM'].map(
+          {['DeepSeek', 'Qwen', 'GLM', 'Kimi', 'MiniMax', 'Mimo'].map(
             (name) => (
               <div
                 key={name}
@@ -171,8 +171,8 @@ export function Features(_props: FeaturesProps) {
     },
     {
       icon: <Users className='size-5' strokeWidth={1.5} />,
-      title: t('Team ready'),
-      desc: t('Workspaces with per-member keys and group quotas'),
+      title: t('Usage visibility'),
+      desc: t('Real-time dashboard with per-model spend and quota breakdowns'),
     },
     {
       icon: <HeartHandshake className='size-5' strokeWidth={1.5} />,

@@ -98,9 +98,9 @@ export function Stats(_props: StatsProps) {
   const { t } = useTranslation()
 
   const stats: StatItem[] = [
-    { end: 50, suffix: '+', label: t('models available') },
-    { end: 6, suffix: '+', label: t('coding tools supported') },
-    { end: 99, suffix: '.9%', label: t('uptime target') },
+    { end: 25, suffix: '', label: t('models, one API') },
+    { end: 3, suffix: '', label: t('plans, from $18/month') },
+    { end: 100, suffix: 'M', label: t('tokens/day on Max') },
     { end: 1, suffix: ' key', label: t('for every model') },
   ]
 

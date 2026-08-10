@@ -30,3 +30,8 @@ export {
 } from './model-details'
 export { PricingTable } from './pricing-table'
 export { PlansSection } from './plans-section'
+export { FeatureGrid } from './feature-grid'
+export { HowItWorks } from './how-it-works'
+export { ComparisonTable } from './comparison-table'
+export { FaqSection } from './faq-section'
+export { CtaBanner } from './cta-banner'
