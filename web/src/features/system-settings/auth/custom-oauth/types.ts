@@ -38,6 +38,7 @@ export interface CustomOAuthProvider {
   username_field: string
   display_name_field: string
   email_field: string
+  email_verified_field: string
   well_known: string
   auth_style: number // 0=auto, 1=params, 2=header
   access_policy: string
@@ -71,6 +72,7 @@ export const customOAuthFormSchema = z.object({
   username_field: z.string().optional().default(''),
   display_name_field: z.string().optional().default(''),
   email_field: z.string().optional().default(''),
+  email_verified_field: z.string().optional().default(''),
   well_known: z.string().optional().default(''),
   auth_style: z.number().int().min(0).max(2).default(0),
   access_policy: z.string().optional().default(''),

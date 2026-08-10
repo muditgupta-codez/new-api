@@ -358,6 +358,24 @@ func findOrCreateOAuthUser(c *gin.Context, provider oauth.Provider, oauthUser *o
 		user.Email = model.NormalizeEmail(oauthUser.Email)
 		if err := model.EnsureEmailAvailable(user.Email, 0); err != nil {
 			if errors.Is(err, model.ErrEmailAlreadyTaken) {
+				// Auto-link: if the provider verified the email, bind this provider
+				// identity to the existing account and log in as that user.
+				if emailVerified, ok := oauthUser.Extra["email_verified"].(string); ok &&
+					(emailVerified == "true" || emailVerified == "1") {
+					if existingUser, lookupErr := model.GetUserByEmail(user.Email); lookupErr == nil &&
+						existingUser.Id != 0 {
+						if genericProvider, ok := provider.(*oauth.GenericOAuthProvider); ok {
+							binding := &model.UserOAuthBinding{
+								UserId:         existingUser.Id,
+								ProviderId:     genericProvider.GetProviderId(),
+								ProviderUserId: oauthUser.ProviderUserID,
+							}
+							if bindErr := model.CreateUserOAuthBinding(binding); bindErr == nil {
+								return existingUser, nil
+							}
+						}
+					}
+				}
 				return nil, &OAuthEmailAlreadyTakenError{}
 			}
 			return nil, err

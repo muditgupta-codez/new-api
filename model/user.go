@@ -325,6 +325,19 @@ func EnsureEmailAvailable(email string, excludeUserID int) error {
 	return nil
 }
 
+// GetUserByEmail returns the first non-deleted user with the given email.
+func GetUserByEmail(email string) (*User, error) {
+	email = NormalizeEmail(email)
+	if email == "" {
+		return nil, errors.New("empty email")
+	}
+	var user User
+	if err := DB.Where("LOWER(email) = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 // withNormalizedEmailLock serializes concurrent writers that target the same
 // normalized email inside tx, so a "check then write" sequence cannot be raced
 // by two transactions. It must be called inside an active transaction; the lock

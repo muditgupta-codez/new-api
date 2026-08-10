@@ -100,6 +100,7 @@ export function ProviderFormDialog(props: ProviderFormDialogProps) {
       username_field: '',
       display_name_field: '',
       email_field: '',
+      email_verified_field: '',
       well_known: '',
       auth_style: 0,
       access_policy: '',
@@ -131,6 +132,7 @@ export function ProviderFormDialog(props: ProviderFormDialogProps) {
         username_field: props.provider.username_field || '',
         display_name_field: props.provider.display_name_field || '',
         email_field: props.provider.email_field || '',
+        email_verified_field: props.provider.email_verified_field || '',
         well_known: props.provider.well_known || '',
         auth_style: props.provider.auth_style ?? 0,
         access_policy: props.provider.access_policy || '',
@@ -152,6 +154,7 @@ export function ProviderFormDialog(props: ProviderFormDialogProps) {
         username_field: '',
         display_name_field: '',
         email_field: '',
+        email_verified_field: '',
         well_known: '',
         auth_style: 0,
         access_policy: '',
@@ -584,6 +587,25 @@ export function ProviderFormDialog(props: ProviderFormDialogProps) {
                     <FormControl>
                       <Input placeholder='email' {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='email_verified_field'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Email Verified Field')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder='email_verified' {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      {t(
+                        'User info field indicating the email is verified. When set and true, existing accounts with the same email are auto-linked on login.'
+                      )}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

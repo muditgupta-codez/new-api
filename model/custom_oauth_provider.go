@@ -55,6 +55,7 @@ type CustomOAuthProvider struct {
 	UsernameField    string `json:"username_field" gorm:"type:varchar(128);default:'preferred_username'"` // Username field path
 	DisplayNameField string `json:"display_name_field" gorm:"type:varchar(128);default:'name'"`           // Display name field path
 	EmailField       string `json:"email_field" gorm:"type:varchar(128);default:'email'"`                 // Email field path
+	EmailVerifiedField string `json:"email_verified_field" gorm:"type:varchar(128);default:''"`           // Email verified field path (e.g. "email_verified")
 
 	// Advanced options
 	WellKnown           string `json:"well_known" gorm:"type:varchar(512)"`            // OIDC discovery endpoint (optional)

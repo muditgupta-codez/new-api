@@ -244,6 +244,15 @@ func (p *GenericOAuthProvider) GetUserInfo(ctx context.Context, token *OAuthToke
 	displayName := gjson.Get(bodyStr, p.config.DisplayNameField).String()
 	email := gjson.Get(bodyStr, p.config.EmailField).String()
 
+	// Email verified flag (used to auto-link existing accounts by email)
+	emailVerified := ""
+	if p.config.EmailVerifiedField != "" {
+		ev := gjson.Get(bodyStr, p.config.EmailVerifiedField)
+		if ev.Exists() {
+			emailVerified = strings.ToLower(ev.String())
+		}
+	}
+
 	// If user ID field returns a number, convert it
 	if userId == "" {
 		// Try to get as number
@@ -285,7 +294,8 @@ func (p *GenericOAuthProvider) GetUserInfo(ctx context.Context, token *OAuthToke
 		DisplayName:    displayName,
 		Email:          email,
 		Extra: map[string]any{
-			"provider": p.config.Slug,
+			"provider":       p.config.Slug,
+			"email_verified": emailVerified,
 		},
 	}, nil
 }
