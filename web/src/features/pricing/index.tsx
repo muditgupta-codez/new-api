@@ -16,148 +16,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
 import { PageTransition } from '@/components/page-transition'
 
-import {
-  LoadingSkeleton,
-  EmptyState,
-  SearchBar,
-  PricingTable,
-  PricingSidebar,
-  PricingToolbar,
-  ModelCardGrid,
-  ModelDetailsDrawer,
-  PlansSection,
-} from './components'
-import { EXCLUDED_GROUPS, VIEW_MODES } from './constants'
-import { useFilters } from './hooks/use-filters'
-import { usePricingData } from './hooks/use-pricing-data'
+import { PlansSection } from './components'
 
 export function Pricing() {
   const { t } = useTranslation()
-  const [selectedModelName, setSelectedModelName] = useState<string | null>(
-    null
-  )
-
-  const {
-    models,
-    vendors,
-    groupRatio,
-    usableGroup,
-    endpointMap,
-    autoGroups,
-    isLoading,
-    priceRate,
-    usdExchangeRate,
-  } = usePricingData()
-
-  const {
-    searchInput,
-    sortBy,
-    vendorFilter,
-    groupFilter,
-    quotaTypeFilter,
-    endpointTypeFilter,
-    tagFilter,
-    tokenUnit,
-    viewMode,
-    showRechargePrice,
-    setSearchInput,
-    setSortBy,
-    setVendorFilter,
-    setGroupFilter,
-    setQuotaTypeFilter,
-    setEndpointTypeFilter,
-    setTagFilter,
-    setTokenUnit,
-    setViewMode,
-    setShowRechargePrice,
-    filteredModels,
-    hasActiveFilters,
-    activeFilterCount,
-    availableTags,
-    clearFilters,
-    clearSearch,
-  } = useFilters(models || [])
-
-  const handleModelClick = useCallback((modelName: string) => {
-    setSelectedModelName(modelName)
-  }, [])
-
-  const selectedModel = useMemo(
-    () =>
-      selectedModelName
-        ? (models || []).find(
-            (model) => model.model_name === selectedModelName
-          ) || null
-        : null,
-    [models, selectedModelName]
-  )
-
-  const availableGroups = useMemo(
-    () =>
-      Object.keys(usableGroup || {}).filter(
-        (g) => !EXCLUDED_GROUPS.includes(g)
-      ),
-    [usableGroup]
-  )
-
-  const handleClearAll = useCallback(() => {
-    clearFilters()
-    clearSearch()
-  }, [clearFilters, clearSearch])
-
-  const renderPricingContent = () => {
-    if (filteredModels.length === 0) {
-      return (
-        <EmptyState
-          searchQuery={searchInput}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={handleClearAll}
-        />
-      )
-    }
-
-    if (viewMode === VIEW_MODES.CARD) {
-      return (
-        <ModelCardGrid
-          models={filteredModels}
-          onModelClick={handleModelClick}
-          priceRate={priceRate}
-          usdExchangeRate={usdExchangeRate}
-          tokenUnit={tokenUnit}
-          showRechargePrice={showRechargePrice}
-          selectedGroup={groupFilter}
-        />
-      )
-    }
-
-    return (
-      <PricingTable
-        models={filteredModels}
-        priceRate={priceRate}
-        usdExchangeRate={usdExchangeRate}
-        tokenUnit={tokenUnit}
-        showRechargePrice={showRechargePrice}
-        selectedGroup={groupFilter}
-        onModelClick={handleModelClick}
-      />
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <PublicLayout showMainContainer={false}>
-        <div className='mx-auto w-full max-w-[1800px] px-3 pt-16 pb-8 sm:px-6 sm:pt-20 sm:pb-10 xl:px-8'>
-          <LoadingSkeleton viewMode={viewMode} />
-        </div>
-      </PublicLayout>
-    )
-  }
 
   return (
     <PublicLayout showMainContainer={false}>
@@ -183,108 +50,11 @@ export function Pricing() {
               {t('Every model. One subscription.')}
             </h1>
             <p className='text-muted-foreground/80 mt-3 text-sm sm:mt-4 sm:text-base'>
-              {t('Your Zeskai plan includes {{count}} models', {
-                count: models?.length || 0,
-              })}
+              {t('Flat monthly pricing. No per-token meter.')}
             </p>
-            <p className='text-muted-foreground/60 mx-auto mt-2 max-w-2xl text-xs leading-relaxed sm:text-sm'>
-              {t(
-                'Browse the catalog included with your subscription. Pick any model — they all work with your single Zeskai API key.'
-              )}
-            </p>
-            <SearchBar
-              value={searchInput}
-              onChange={setSearchInput}
-              onClear={clearSearch}
-              placeholder={t(
-                'Search model name, provider, endpoint, or tag...'
-              )}
-              className='mx-auto mt-4 max-w-2xl sm:mt-6'
-            />
           </header>
 
           <PlansSection />
-
-          <div className='grid gap-4 xl:grid-cols-[330px_minmax(0,1fr)]'>
-            <PricingSidebar
-              quotaTypeFilter={quotaTypeFilter}
-              endpointTypeFilter={endpointTypeFilter}
-              vendorFilter={vendorFilter}
-              groupFilter={groupFilter}
-              tagFilter={tagFilter}
-              onQuotaTypeChange={setQuotaTypeFilter}
-              onEndpointTypeChange={setEndpointTypeFilter}
-              onVendorChange={setVendorFilter}
-              onGroupChange={setGroupFilter}
-              onTagChange={setTagFilter}
-              vendors={vendors || []}
-              groups={availableGroups}
-              groupRatios={groupRatio}
-              tags={availableTags}
-              models={models || []}
-              hasActiveFilters={hasActiveFilters}
-              onClearFilters={clearFilters}
-              className='hover-scrollbar sticky top-4 hidden max-h-[calc(100dvh-2rem)] self-start overflow-y-auto xl:block'
-            />
-
-            <main className='min-w-0 space-y-4'>
-              <PricingToolbar
-                filteredCount={filteredModels.length}
-                totalCount={models?.length}
-                sortBy={sortBy}
-                onSortChange={setSortBy}
-                tokenUnit={tokenUnit}
-                onTokenUnitChange={setTokenUnit}
-                showRechargePrice={showRechargePrice}
-                onRechargePriceChange={setShowRechargePrice}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                quotaTypeFilter={quotaTypeFilter}
-                endpointTypeFilter={endpointTypeFilter}
-                vendorFilter={vendorFilter}
-                groupFilter={groupFilter}
-                tagFilter={tagFilter}
-                onQuotaTypeChange={setQuotaTypeFilter}
-                onEndpointTypeChange={setEndpointTypeFilter}
-                onVendorChange={setVendorFilter}
-                onGroupChange={setGroupFilter}
-                onTagChange={setTagFilter}
-                vendors={vendors || []}
-                groups={availableGroups}
-                groupRatios={groupRatio}
-                tags={availableTags}
-                models={models || []}
-                hasActiveFilters={hasActiveFilters}
-                activeFilterCount={activeFilterCount}
-                onClearFilters={clearFilters}
-              />
-
-              {renderPricingContent()}
-            </main>
-          </div>
-
-          {selectedModel && (
-            <ModelDetailsDrawer
-              open={Boolean(selectedModel)}
-              onOpenChange={(open) => {
-                if (!open) setSelectedModelName(null)
-              }}
-              model={selectedModel}
-              groupRatio={groupRatio || {}}
-              usableGroup={usableGroup || {}}
-              endpointMap={
-                (endpointMap as Record<
-                  string,
-                  { path?: string; method?: string }
-                >) || {}
-              }
-              autoGroups={autoGroups || []}
-              priceRate={priceRate ?? 1}
-              usdExchangeRate={usdExchangeRate ?? 1}
-              tokenUnit={tokenUnit}
-              showRechargePrice={showRechargePrice}
-            />
-          )}
         </PageTransition>
       </div>
     </PublicLayout>
